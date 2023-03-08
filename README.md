@@ -99,7 +99,7 @@ geodesic_trace_cuda mask.em output_vol.em 10 10 10 30 30 30
 **<details><summary>TL;DR</summary><p>**
 ```shell
 # Installs all pre-requisites (a little overkill)
-conda create -n mcm python=3.9 skbuild numpy mrcfile -c conda-forge cxx-compiler c-compiler
+conda create -n mcm python=3.9 skbuild numpy mrcfile cython cmake=3.18 -c conda-forge cxx-compiler c-compiler
 conda activate mcm
 
 # Optional:
@@ -139,9 +139,10 @@ parameters. If the CUDA-accelerated library is found, it will be preferred by th
 * C/C++ compiler
 * Python >= 3.9
 * Python packages: 
-  * skbuild 
+  * skbuild >= 0.15
   * numpy 
   * mrcfile
+  * Cython
 * optional: CUDA toolkit
 </p></details>
 
