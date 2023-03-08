@@ -6,6 +6,8 @@
 *.ko
 *.obj
 *.elf
+*.slo
+*.lo
 
 # Linker output
 *.ilk
@@ -20,7 +22,6 @@
 *.lib
 *.a
 *.la
-*.lo
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -50,3 +51,20 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# CUDA
+*.i
+*.ii
+*.gpu
+*.ptx
+*.cubin
+*.fatbin
+
+# IDE/Python
+.idea
+cmake-build-debug
+build
+dist
+_skbuild
+
+
