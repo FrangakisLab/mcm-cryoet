@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Author: UE, 2023
 
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction
 import sys
 import numpy as np
 import mrcfile
@@ -21,9 +21,9 @@ def main(arg):
     if len(pixelwidth) != 3:
         raise ValueError("Pixel Width must be a 3-element, comma-separated list of floating point values.")
 
-    hx = pixelwidth[0]
+    hx = pixelwidth[2]
     hy = pixelwidth[1]
-    hz = pixelwidth[2]
+    hz = pixelwidth[0]
 
     # Summary
     print("input file = {}".format(arg.input_filename))
@@ -53,7 +53,7 @@ def main(arg):
     print("dimensions are {} x {} x {}\n".format(inp.shape[2], inp.shape[1], inp.shape[0]))
 
     # Process image
-    outp = mcm.mcm(inp, arg.iterations, hx=hx, hy=hy, hz=hz, verbose=True)
+    outp = mcm.mcm(inp, arg.iterations, hx=hx, hy=hy, hz=hz, verbose=True, prefer_gpu=arg.use_gpu)
 
     # Write image output
     if arg.output_filename.endswith('em'):
@@ -70,7 +70,7 @@ def main(arg):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             description='Smooths a volume using mean curvature motion.\n\n'
                                         
                                         'Example: mcm_3D -i "volume.mrc" -o "volume_smooth.mrc" -p 10')
@@ -82,6 +82,9 @@ if __name__ == "__main__":
                         help="number of iterations.", metavar="ITER", type=int, required=True)
     parser.add_argument("-hxyz", "--pixel_width", dest="pixel_width",
                         help="Pixel widths in x, y, z dimensions.", metavar="HX,HY,HZ", type=str, required=False, default='1,1,1')
+    parser.add_argument("-g", "--gpu", dest="use_gpu", action=BooleanOptionalAction,
+                        help="Whether to use CPU or GPU implementation.", type=bool,
+                        required=False, default=True)
 
     args = parser.parse_args()
 

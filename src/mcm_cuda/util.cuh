@@ -15,7 +15,27 @@
 // 3d access tp linear array
 #define access_3d(arr, x, y, z, dx, dy) (arr[(x) + ((dx) * (y)) + ((dx) * (dy) * (z))])
 
+
+
 #ifdef __cplusplus
+#include <iostream>
+
+// CUDA error checking
+#define CUDA_CALL( call )               \
+{                                       \
+cudaError_t result = call;              \
+if ( cudaSuccess != result )            \
+    std::cerr << "CUDA error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << cudaGetErrorString( result ) << " (" << #call << ")" << std::endl;  \
+}
+
+// NPP error checking
+#define NPP_CALL( call )               \
+{                                       \
+NppStatus result = call;              \
+if ( NPP_SUCCESS != result )            \
+    std::cerr << "NPP error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << result << " (" << #call << ")" << std::endl;  \
+}
+
 extern "C" {
 #endif
 

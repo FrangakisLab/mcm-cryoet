@@ -9,9 +9,9 @@ Achilleas Frangakis
 
 void mcm
         (float    ht,        /* time step size, 0 < ht <= 0.25 */
-         long     nx,        /* image dimension in x direction */
-         long     ny,        /* image dimension in y direction */
-         long     nz,        /* image dimension in z direction */
+         int     nx,        /* image dimension in x direction */
+         int     ny,        /* image dimension in y direction */
+         int     nz,        /* image dimension in z direction */
          float    hx,        /* pixel width in x direction */
          float    hy,        /* pixel width in y direction */
          float    hz,        /* pixel width in y direction */
@@ -22,7 +22,7 @@ void mcm
 */
 
 {
-    long    i, j, k;                    /* loop variables */
+    int    i, j, k;                    /* loop variables */
     float   fx, fy, fz, fxx, fxy, fyy, fxz, fyz, fzz;   /* derivatives */
     float   ***f;                     /* u at old time level */
     float   two_hx;                  /* 2.0 * hx, time saver */
@@ -80,7 +80,7 @@ void mcm
                 fyy = (f[i][j+1][k] - 2.0f * f[i][j][k] + f[i][j-1][k]) / hy_sqr;
                 fzz = (f[i][j][k+1] - 2.0f * f[i][j][k] + f[i][j][k-1]) / hz_sqr;
 
-                if (fx * fy < 0.0)
+                if (fx * fy < 0.0f)
                     fxy = (   f[i+1][j+1][k] - f[i][j+1][k] - f[i+1][j][k] + f[i][j][k]
                               + f[i-1][j-1][k] - f[i][j-1][k] - f[i-1][j][k] + f[i][j][k] )
                           / two_hx_hy;
@@ -89,7 +89,7 @@ void mcm
                             - f[i+1][j-1][k] + f[i][j-1][k] + f[i-1][j][k] - f[i][j][k] )
                           / two_hx_hy;
 
-                if (fy * fz < 0.0)
+                if (fy * fz < 0.0f)
                     fyz = (   f[i][j+1][k+1] - f[i][j+1][k] - f[i][j][k+1] + f[i][j][k]
                               + f[i][j-1][k-1] - f[i][j-1][k] - f[i][j][k-1] + f[i][j][k] )
                           / two_hy_hz;
@@ -98,7 +98,7 @@ void mcm
                             - f[i][j-1][k+1] + f[i][j-1][k] + f[i][j][k-1] - f[i][j][k] )
                           / two_hy_hz;
 
-                if (fx * fz < 0.0)
+                if (fx * fz < 0.0f)
                     fxz = (   f[i+1][j][k+1] - f[i+1][j][k] - f[i][j][k+1] + f[i][j][k]
                               + f[i-1][j][k-1] - f[i-1][j][k] - f[i][j][k-1] + f[i][j][k] )
                           / two_hx_hz;
@@ -145,6 +145,7 @@ void mcm_iterate(float ***u,
         if(verbose) {
             printf("iteration number: %5ld / %ld \n", p, pmax);
         }
+
         mcm (ht, nx, ny, nz, hx, hy, hz, u);
 
         /* check minimum, maximum, mean, variance */

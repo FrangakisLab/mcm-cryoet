@@ -119,7 +119,7 @@ int main (int argc, char **argv)
     y3 = y3 - 1;
 
 /* allocate storage */
-    size_t size = nx * ny * nz * sizeof(float);
+    size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
     cudaMallocHost((void**)&h_g, size_bytes);
     cudaMalloc((void**)&d_g, size_bytes);

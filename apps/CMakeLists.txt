@@ -40,11 +40,11 @@ target_link_libraries(geodesic_trace
         mcm
         )
 
-if(SKBUILD)
-    install(TARGETS mcm_levelset RUNTIME DESTINATION bin/)
-    install(TARGETS mcm_3D RUNTIME DESTINATION bin/)
-    install(TARGETS geodesic_trace RUNTIME` DESTINATION bin/)
-endif()
+#if(SKBUILD)
+#    install(TARGETS mcm_levelset RUNTIME DESTINATION bin/)
+#    install(TARGETS mcm_3D RUNTIME DESTINATION bin/)
+#    install(TARGETS geodesic_trace RUNTIME DESTINATION bin/)
+#endif()
 
 
 
@@ -118,9 +118,9 @@ if(CUDAToolkit_FOUND)
                 mcm_cuda
             )
 
-    if(SKBUILD)
-        install(TARGETS mcm_levelset_cuda RUNTIME DESTINATION bin/)
-        install(TARGETS mcm_3D_cuda RUNTIME DESTINATION bin/)
-        install(TARGETS geodesic_trace_cuda RUNTIME DESTINATION bin/)
-    endif()
+#    if(SKBUILD)
+#        install(TARGETS mcm_levelset_cuda RUNTIME DESTINATION bin/)
+#        install(TARGETS mcm_3D_cuda RUNTIME DESTINATION bin/)
+#        install(TARGETS geodesic_trace_cuda RUNTIME DESTINATION bin/)
+#    endif()
 endif()

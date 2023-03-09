@@ -81,7 +81,7 @@ int main (int argc, char **argv)
 
 #ifdef USE_CUDA
 /* allocate storage */
-    size_t size = nx * ny * nz * sizeof(float);
+    size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
     h_u = malloc(size_bytes);
     cudaMalloc((void**)&d_u, size_bytes);
@@ -89,6 +89,14 @@ int main (int argc, char **argv)
 /* read image data */
     emread_linear(filename_in, h_u);
 
+    printf("value 1,1,1: %f\n", access_3d(h_u, 1, 1, 1, nx, ny));
+    printf("value 10,1,1: %f\n", access_3d(h_u, 10, 1, 1, nx, ny));
+    printf("value 10,10,1: %f\n", access_3d(h_u, 10, 10, 1, nx, ny));
+    printf("value 10,10,10: %f\n", access_3d(h_u, 10, 10, 10, nx, ny));
+    printf("value 1,10,10: %f\n", access_3d(h_u, 1, 10, 10, nx, ny));
+    printf("value 1,1,10: %f\n", access_3d(h_u, 1, 1, 10, nx, ny));
+
+    printf("value 45,21,30: %i\n", per_idx(-1, nz));
     // Send to GPU
     cudaMemcpy(d_u, h_u, size_bytes, cudaMemcpyHostToDevice);
 

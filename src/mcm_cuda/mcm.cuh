@@ -10,9 +10,9 @@ extern "C" {
 __host__
 void mcm_CUDA
         (float    ht,         /* time step size, 0 < ht <= 0.25 */
-         long     nx,         /* image dimension in x direction */
-         long     ny,         /* image dimension in y direction */
-         long     nz,         /* image dimension in z direction */
+         int     nx,         /* image dimension in x direction */
+         int     ny,         /* image dimension in y direction */
+         int     nz,         /* image dimension in z direction */
          float    hx,         /* pixel width in x direction */
          float    hy,         /* pixel width in y direction */
          float    hz,         /* pixel width in y direction */

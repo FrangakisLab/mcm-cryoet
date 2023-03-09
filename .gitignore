@@ -66,5 +66,4 @@ cmake-build-debug
 build
 dist
 _skbuild
-
-
+_cmake_test_compile/

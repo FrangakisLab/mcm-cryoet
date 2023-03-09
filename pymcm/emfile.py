@@ -62,25 +62,28 @@ EM_HEADER_DTYPE = np.dtype([
 
 def emread(em_name):
     with open(em_name, "rb") as fin:
+        # Read header
         header_array = bytearray(512)
         bytes_read = fin.readinto(header_array)
         header = np.frombuffer(header_array, dtype=EM_HEADER_DTYPE)
 
+        # Check datatype
         datatype = header['DataType'][0]
         if datatype not in EM_DATA_TYPE.keys():
             raise ValueError("Unknown Data Type {} for file {}".format( datatype, em_name))
 
         npdtype = np.dtype(EM_DATA_TYPE[datatype])
 
+        # Dimensions
         dimx = header['DimX'][0]
         dimy = header['DimY'][0]
         dimz = header['DimZ'][0]
 
+        # Read data
         data_array = bytearray(dimx * dimy * dimz * npdtype.itemsize)
         bytes_read = fin.readinto(data_array)
         data = np.frombuffer(data_array, dtype=npdtype, count=dimx * dimy * dimz)
-        data = data.reshape((dimz, dimy, dimx))
-
+        data = data.reshape((dimz, dimy, dimx), order='C')
     return data
 
 def emwrite(data, em_name):

@@ -18,26 +18,26 @@ void analyse_CUDA
 
     // Alloc
     Npp32f *d_min, *d_max, *d_mean, *d_std;
-    cudaMalloc((void **) &d_min, sizeof(float));
-    cudaMalloc((void **) &d_max, sizeof(float));
-    cudaMalloc((void **) &d_mean, sizeof(float));
-    cudaMalloc((void **) &d_std, sizeof(float));
+    CUDA_CALL(cudaMalloc((void **) &d_min, sizeof(float)));
+    CUDA_CALL(cudaMalloc((void **) &d_max, sizeof(float)));
+    CUDA_CALL(cudaMalloc((void **) &d_mean, sizeof(float)));
+    CUDA_CALL(cudaMalloc((void **) &d_std, sizeof(float)));
 
     // minmax
-    nppsMinMax_32f(d_u, (int) size, d_min, d_max, d_buf1);
-    cudaMemcpy(h_min, d_min, sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_max, d_max, sizeof(float), cudaMemcpyDeviceToHost);
+    NPP_CALL(nppsMinMax_32f(d_u, (int) size, d_min, d_max, d_buf1));
+    CUDA_CALL(cudaMemcpy(h_min, d_min, sizeof(float), cudaMemcpyDeviceToHost));
+    CUDA_CALL(cudaMemcpy(h_max, d_max, sizeof(float), cudaMemcpyDeviceToHost));
 
     // meanstd
-    nppsMeanStdDev_32f(d_u, (int) size, d_mean, d_std, d_buf2);
-    cudaMemcpy(h_mean, d_mean, sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_std, d_std, sizeof(float), cudaMemcpyDeviceToHost);
+    NPP_CALL(nppsMeanStdDev_32f(d_u, (int) size, d_mean, d_std, d_buf2));
+    CUDA_CALL(cudaMemcpy(h_mean, d_mean, sizeof(float), cudaMemcpyDeviceToHost));
+    CUDA_CALL(cudaMemcpy(h_std, d_std, sizeof(float), cudaMemcpyDeviceToHost));
 
     // Free
-    cudaFree(d_min);
-    cudaFree(d_max);
-    cudaFree(d_mean);
-    cudaFree(d_std);
+    CUDA_CALL(cudaFree(d_min));
+    CUDA_CALL(cudaFree(d_max));
+    CUDA_CALL(cudaFree(d_mean));
+    CUDA_CALL(cudaFree(d_std));
 }
 
 extern "C"

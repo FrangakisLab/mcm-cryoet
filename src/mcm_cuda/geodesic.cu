@@ -1,16 +1,19 @@
 #include "geodesic.cuh"
 
+
+
 extern "C" {
     __global__
-    void segm_geo_kernel(const float *fg, float *ug, const float *gg, float *grdx, float *grdy, float *grdz, dim3 dim) {
+    void segm_geo_kernel(const float *fg, float *ug, const float *gg, float *grdx, float *grdy, float *grdz, int3 dim) {
         // Shared memory for this block
         __shared__ float f[10][10][10];
 
         // Global idx
-        const unsigned int gx = blockIdx.x * blockDim.x + threadIdx.x;
-        const unsigned int gy = blockIdx.y * blockDim.y + threadIdx.y;
-        const unsigned int gz = blockIdx.z * blockDim.z + threadIdx.z;
+        const int gx = (int)(blockIdx.x * blockDim.x + threadIdx.x);
+        const int gy = (int)(blockIdx.y * blockDim.y + threadIdx.y);
+        const int gz = (int)(blockIdx.z * blockDim.z + threadIdx.z);
 
+        // Threads larger than the volume+1 go.
         if (gx >= dim.x) return;
         if (gy >= dim.y) return;
         if (gz >= dim.z) return;
@@ -20,83 +23,76 @@ extern "C" {
         const unsigned int j = threadIdx.y + 1;
         const unsigned int k = threadIdx.z + 1;
 
-        // Copy the data (direct match)
+        // Incomplete block borders
+        int3 blockMax = make_int3(8, 8, 8);
+        if (gx == dim.x-1) blockMax.x = (int)threadIdx.x + 1;
+        if (gy == dim.y-1) blockMax.y = (int)threadIdx.y + 1;
+        if (gz == dim.z-1) blockMax.z = (int)threadIdx.z + 1;
+
+        // Copy the data (direct match).
         f[i][j][k] = access_3d(fg, gx, gy, gz, dim.x, dim.y);
+
+        // Helper
+        int gxm1 = per_idx(gx - 1, dim.x);
+        int gym1 = per_idx(gy - 1, dim.y);
+        int gzm1 = per_idx(gz - 1, dim.z);
+
+        int gxpb = per_idx(gx + blockMax.x, dim.x);
+        int gypb = per_idx(gy + blockMax.y, dim.y);
+        int gzpb = per_idx(gz + blockMax.z, dim.z);
 
         // Overlap x
         if (threadIdx.x < 1) {
-            //printf("hit %i\n", per_idx(0-1, dim.x));
-            f[i - 1][j][k] = access_3d(fg, per_idx(gx - 1, dim.x), gy, gz, dim.x, dim.y);
-            f[i + blockDim.x][j][k] = access_3d(fg, per_idx(gx + blockDim.x, dim.x), gy, gz, dim.x, dim.y);
+            f[i - 1][j][k] = access_3d(fg, gxm1, gy, gz, dim.x, dim.y);
+            f[i + blockMax.x][j][k] = access_3d(fg, gxpb, gy, gz, dim.x, dim.y);
         }
 
         // Overlap y
         if (threadIdx.y < 1) {
-            f[i][j - 1][k] = access_3d(fg, gx, per_idx(gy - 1, dim.y), gz, dim.x, dim.y);
-            f[i][j + blockDim.y][k] = access_3d(fg, gx, per_idx(gy + blockDim.y, dim.y), gz, dim.x, dim.y);
+            f[i][j - 1][k] = access_3d(fg, gx, gym1, gz, dim.x, dim.y);
+            f[i][j + blockMax.y][k] = access_3d(fg, gx, gypb, gz, dim.x, dim.y);
         }
 
         // Overlap z
         if (threadIdx.z < 1) {
-            f[i][j][k - 1] = access_3d(fg, gx, gy, per_idx(gz - 1, dim.z), dim.x, dim.y);
-            f[i][j][k + blockDim.z] = access_3d(fg, gx, gy, per_idx(gz + blockDim.z, dim.z), dim.x, dim.y);
+            f[i][j][k - 1] = access_3d(fg, gx, gy, gzm1, dim.x, dim.y);
+            f[i][j][k + blockMax.z] = access_3d(fg, gx, gy, gzpb, dim.x, dim.y);
         }
 
         // Corners xy
         if (threadIdx.x < 1 && threadIdx.y < 1) {
-            f[i - 1][j - 1][k] = access_3d(fg, per_idx(gx - 1, dim.x), per_idx(gy - 1, dim.y), gz, dim.x, dim.y);
-            f[i + blockDim.x][j + blockDim.y][k] = access_3d(fg, per_idx(gx + blockDim.x, dim.x),
-                                                             per_idx(gy + blockDim.y, dim.y), gz, dim.x, dim.y);
-            f[i - 1][j + blockDim.y][k] = access_3d(fg, per_idx(gx - 1, dim.x), per_idx(gy + blockDim.y, dim.y), gz, dim.x,
-                                                    dim.y);
-            f[i + blockDim.x][j - 1][k] = access_3d(fg, per_idx(gx + blockDim.x, dim.x), per_idx(gy - 1, dim.y), gz, dim.x,
-                                                    dim.y);
+            f[i - 1][j - 1][k] = access_3d(fg, gxm1, gym1, gz, dim.x, dim.y);
+            f[i + blockMax.x][j + blockMax.y][k] = access_3d(fg, gxpb, gypb, gz, dim.x, dim.y);
+            f[i - 1][j + blockMax.y][k] = access_3d(fg, gxm1, gypb, gz, dim.x, dim.y);
+            f[i + blockMax.x][j - 1][k] = access_3d(fg, gxpb, gym1, gz, dim.x, dim.y);
         }
 
         // Corners xz
         if (threadIdx.x < 1 && threadIdx.z < 1) {
-            f[i - 1][j][k - 1] = access_3d(fg, per_idx(gx - 1, dim.x), gy, per_idx(gz - 1, dim.z), dim.x, dim.y);
-            f[i + blockDim.x][j][k + blockDim.z] = access_3d(fg, per_idx(gx + blockDim.x, dim.x), gy,
-                                                             per_idx(gz + blockDim.z, dim.z), dim.x, dim.y);
-            f[i - 1][j][k + blockDim.z] = access_3d(fg, per_idx(gx - 1, dim.x), gy, per_idx(gz + blockDim.z, dim.z), dim.x,
-                                                    dim.y);
-            f[i + blockDim.x][j][k - 1] = access_3d(fg, per_idx(gx + blockDim.x, dim.x), gy, per_idx(gz - 1, dim.z), dim.x,
-                                                    dim.y);
+            f[i - 1][j][k - 1] = access_3d(fg, gxm1, gy, gzm1, dim.x, dim.y);
+            f[i + blockMax.x][j][k + blockMax.z] = access_3d(fg, gxpb, gy, gzpb, dim.x, dim.y);
+            f[i - 1][j][k + blockMax.z] = access_3d(fg, gxm1, gy, gzpb, dim.x, dim.y);
+            f[i + blockMax.x][j][k - 1] = access_3d(fg, gxpb, gy, gzm1, dim.x, dim.y);
         }
 
         // Corners yz
         if (threadIdx.y < 1 && threadIdx.z < 1) {
-            f[i][j - 1][k - 1] = access_3d(fg, gx, per_idx(gy - 1, dim.y), per_idx(gz - 1, dim.z), dim.x, dim.y);
-            f[i][j + blockDim.y][k + blockDim.z] = access_3d(fg, gx, per_idx(gy + blockDim.y, dim.y),
-                                                             per_idx(gz + blockDim.z, dim.z), dim.x, dim.y);
-            f[i][j - 1][k + blockDim.z] = access_3d(fg, gx, per_idx(gy - 1, dim.y), per_idx(gz + blockDim.z, dim.z), dim.x,
-                                                    dim.y);
-            f[i][j + blockDim.y][k - 1] = access_3d(fg, gx, per_idx(gy + blockDim.y, dim.y), per_idx(gz - 1, dim.z), dim.x,
-                                                    dim.y);
+            f[i][j - 1][k - 1] = access_3d(fg, gx, gym1, gzm1, dim.x, dim.y);
+            f[i][j + blockMax.y][k + blockMax.z] = access_3d(fg, gx, gypb, gzpb, dim.x, dim.y);
+            f[i][j - 1][k + blockMax.z] = access_3d(fg, gx, gym1, gzpb, dim.x, dim.y);
+            f[i][j + blockMax.y][k - 1] = access_3d(fg, gx, gypb, gzm1, dim.x, dim.y);
         }
 
         // Corners all
         if (threadIdx.x < 1 && threadIdx.y < 1 && threadIdx.z < 1) {
-            f[i - 1][j - 1][k - 1] = access_3d(fg, per_idx(gx - 1, dim.x), per_idx(gy - 1, dim.y), per_idx(gz - 1, dim.z),
-                                               dim.x, dim.y);
-            f[i + blockDim.x][j + blockDim.y][k + blockDim.z] = access_3d(fg, per_idx(gx + blockDim.x, dim.x),
-                                                                          per_idx(gy + blockDim.y, dim.y),
-                                                                          per_idx(gz + blockDim.z, dim.z), dim.x, dim.y);
-            f[i - 1][j + blockDim.y][k + blockDim.z] = access_3d(fg, per_idx(gx - 1, dim.x),
-                                                                 per_idx(gy + blockDim.y, dim.y),
-                                                                 per_idx(gz + blockDim.z, dim.z), dim.x, dim.y);
-            f[i + blockDim.x][j - 1][k + blockDim.z] = access_3d(fg, per_idx(gx + blockDim.x, dim.x),
-                                                                 per_idx(gy - 1, dim.y), per_idx(gz + blockDim.z, dim.z),
-                                                                 dim.x, dim.y);
-            f[i + blockDim.x][j + blockDim.y][k - 1] = access_3d(fg, per_idx(gx + blockDim.x, dim.x),
-                                                                 per_idx(gy + blockDim.y, dim.y), per_idx(gz - 1, dim.z),
-                                                                 dim.x, dim.y);
-            f[i + blockDim.x][j - 1][k - 1] = access_3d(fg, per_idx(gx + blockDim.x, dim.x), per_idx(gy - 1, dim.y),
-                                                        per_idx(gz - 1, dim.z), dim.x, dim.y);
-            f[i - 1][j + blockDim.y][k - 1] = access_3d(fg, per_idx(gx - 1, dim.x), per_idx(gy + blockDim.y, dim.y),
-                                                        per_idx(gz - 1, dim.z), dim.x, dim.y);
-            f[i - 1][j - 1][k + blockDim.z] = access_3d(fg, per_idx(gx - 1, dim.x), per_idx(gy - 1, dim.y),
-                                                        per_idx(gz + blockDim.z, dim.z), dim.x, dim.y);
+            f[i - 1][j - 1][k - 1] = access_3d(fg, gxm1, gym1, gzm1, dim.x, dim.y);
+            f[i + blockMax.x][j + blockMax.y][k + blockMax.z] = access_3d(fg, gxpb, gypb, gzpb, dim.x, dim.y);
+            f[i - 1][j + blockMax.y][k + blockMax.z] = access_3d(fg, gxm1, gypb, gzpb, dim.x, dim.y);
+            f[i + blockMax.x][j - 1][k + blockMax.z] = access_3d(fg, gxpb, gym1, gzpb, dim.x, dim.y);
+            f[i + blockMax.x][j + blockMax.y][k - 1] = access_3d(fg, gxpb, gypb, gzm1, dim.x, dim.y);
+            f[i + blockMax.x][j - 1][k - 1] = access_3d(fg, gxpb, gym1, gzm1, dim.x, dim.y);
+            f[i - 1][j + blockMax.y][k - 1] = access_3d(fg, gxm1, gypb, gzm1, dim.x, dim.y);
+            f[i - 1][j - 1][k + blockMax.z] = access_3d(fg, gxm1, gym1, gzpb, dim.x, dim.y);
         }
 
         // Sync
@@ -143,6 +139,7 @@ extern "C" {
         }
     }
 
+
     __host__
     void segm_geo_cuda
             (long nx,        /* image dimension in x direction */
@@ -172,10 +169,10 @@ extern "C" {
 
         dim3 grid;
         grid.x = nx / 8 + 1;
-        grid.y = nx / 8 + 1;
-        grid.z = nx / 8 + 1;
+        grid.y = ny / 8 + 1;
+        grid.z = nz / 8 + 1;
 
-        dim3 dim;
+        int3 dim;
         dim.x = nx;
         dim.y = ny;
         dim.z = nz;
@@ -216,13 +213,14 @@ extern "C" {
         size_t size = nx * ny * nz;
         size_t size_bytes = size * sizeof(float);
 
-        cudaMallocHost((void**)&h_grdx, size_bytes);
-        cudaMallocHost((void**)&h_grdy, size_bytes);
-        cudaMallocHost((void**)&h_grdz, size_bytes);
+        cudaMallocHost((void **) &h_grdx, size_bytes);
+        cudaMallocHost((void **) &h_grdy, size_bytes);
+        cudaMallocHost((void **) &h_grdz, size_bytes);
 
         if (verbose) {
             analyse_CUDA(d_u, nx, ny, nz, d_minmax, d_meastd, &h_min, &h_max, &h_mean, &h_std);
-            printf("Input Data: min: %3.6f, max: %3.6f, mean: %3.6f, variance: %3.6f\n\n", h_min, h_max, h_mean, h_std * h_std);
+            printf("Input Data: min: %3.6f, max: %3.6f, mean: %3.6f, variance: %3.6f\n\n", h_min, h_max, h_mean,
+                   h_std * h_std);
         }
 
         float h_val_u = 0.f;
@@ -235,7 +233,8 @@ extern "C" {
             /* check minimum, maximum, mean, variance */
             if (verbose) {
                 analyse_CUDA(d_u, nx, ny, nz, d_minmax, d_meastd, &h_min, &h_max, &h_mean, &h_std);
-                printf("LevelSet iter %d: min: %3.6f, max: %3.6f, mean: %3.6f, variance: %3.6f\n", c, h_min, h_max, h_mean, h_std * h_std);
+                printf("LevelSet iter %d: min: %3.6f, max: %3.6f, mean: %3.6f, variance: %3.6f\n", c, h_min, h_max, h_mean,
+                       h_std * h_std);
             }
 
             /* pull testvalue from device */
@@ -251,71 +250,72 @@ extern "C" {
         // Null u and set start point
         memset(h_u, 0, size_bytes);
         access_3d(h_u, y1, y2, y3, nx, ny) = 1.f;
-        y1f=(float)y1; y2f=(float)y2; y3f=(float)y3;
+        y1f = (float) y1;
+        y2f = (float) y2;
+        y3f = (float) y3;
 
         if (verbose) {
-            printf("%f, %f, %f  - %d %d %d\n", y1f+1, y2f+1, y3f+1, y1+1, y2+1, y3+1);
+            printf("%f, %f, %f  - %d %d %d\n", y1f + 1, y2f + 1, y3f + 1, y1 + 1, y2 + 1, y3 + 1);
             fflush(stdout);
         }
 
         c = 0;
-        access_3d(h_trace, 0, c, 0, 3, maxstep) = y1f+1;
-        access_3d(h_trace, 1, c, 0, 3, maxstep) = y2f+1;
-        access_3d(h_trace, 2, c, 0, 3, maxstep) = y3f+1;
+        access_3d(h_trace, 0, c, 0, 3, maxstep) = y1f + 1;
+        access_3d(h_trace, 1, c, 0, 3, maxstep) = y2f + 1;
+        access_3d(h_trace, 2, c, 0, 3, maxstep) = y3f + 1;
 
-        while (x1!=roundAF(y1f) || x2!=roundAF(y2f) || x3!=roundAF(y3f))
-        {
+        while (x1 != roundAF(y1f) || x2 != roundAF(y2f) || x3 != roundAF(y3f)) {
             /* calulate exact stepwidth in each direction for next step */
-            gc1 = interpol_linear (h_grdx, y1f, y2f, y3f, nx, ny);
-            gc2 = interpol_linear (h_grdy, y1f, y2f, y3f, nx, ny);
-            gc3 = interpol_linear (h_grdz, y1f, y2f, y3f, nx, ny);
+            gc1 = interpol_linear(h_grdx, y1f, y2f, y3f, nx, ny);
+            gc2 = interpol_linear(h_grdy, y1f, y2f, y3f, nx, ny);
+            gc3 = interpol_linear(h_grdz, y1f, y2f, y3f, nx, ny);
 
             /* calulate exact coordinates of next step */
-            y1f=y1f+gc1;
-            y2f=y2f+gc2;
-            y3f=y3f+gc3;
+            y1f = y1f + gc1;
+            y2f = y2f + gc2;
+            y3f = y3f + gc3;
 
             /* calulate shares of neighbor positions in each direction */
-            ipx = (long)y1f;
-            vx2 = y1f - (float)ipx;
+            ipx = (long) y1f;
+            vx2 = y1f - (float) ipx;
             vx1 = 1 - vx2;
-            ipy = (long)y2f;
-            vy2 = y2f - (float)ipy;
+            ipy = (long) y2f;
+            vy2 = y2f - (float) ipy;
             vy1 = 1 - vy2;
-            ipz = (long)y3f;
-            vz2 = y3f - (float)ipz;
+            ipz = (long) y3f;
+            vz2 = y3f - (float) ipz;
             vz1 = 1 - vz2;
 
             /* calulate grey values of 8 neighbor pixels  */
-            access_3d(h_u, ipx, ipy, ipz, nx, ny) += (vx1*vy1*vz1);
-            access_3d(h_u, ipx+1, ipy, ipz, nx, ny) += (vx2*vy1*vz1);
-            access_3d(h_u, ipx, ipy+1, ipz, nx, ny) += (vx1*vy2*vz1);
-            access_3d(h_u, ipx+1, ipy+1, ipz, nx, ny) += (vx2*vy2*vz1);
-            access_3d(h_u, ipx, ipy, ipz+1, nx, ny) += (vx1*vy1*vz2);
-            access_3d(h_u, ipx+1, ipy, ipz+1, nx, ny) += (vx2*vy1*vz2);
-            access_3d(h_u, ipx, ipy+1, ipz+1, nx, ny) += (vx1*vy2*vz2);
-            access_3d(h_u, ipx+1, ipy+1, ipz+1, nx, ny) += (vx2*vy2*vz2);
+            access_3d(h_u, ipx, ipy, ipz, nx, ny) += (vx1 * vy1 * vz1);
+            access_3d(h_u, ipx + 1, ipy, ipz, nx, ny) += (vx2 * vy1 * vz1);
+            access_3d(h_u, ipx, ipy + 1, ipz, nx, ny) += (vx1 * vy2 * vz1);
+            access_3d(h_u, ipx + 1, ipy + 1, ipz, nx, ny) += (vx2 * vy2 * vz1);
+            access_3d(h_u, ipx, ipy, ipz + 1, nx, ny) += (vx1 * vy1 * vz2);
+            access_3d(h_u, ipx + 1, ipy, ipz + 1, nx, ny) += (vx2 * vy1 * vz2);
+            access_3d(h_u, ipx, ipy + 1, ipz + 1, nx, ny) += (vx1 * vy2 * vz2);
+            access_3d(h_u, ipx + 1, ipy + 1, ipz + 1, nx, ny) += (vx2 * vy2 * vz2);
 
             c++;
-            access_3d(h_trace, 0, c, 0, 3, maxstep) = y1f+1;
-            access_3d(h_trace, 1, c, 0, 3, maxstep) = y2f+1;
-            access_3d(h_trace, 2, c, 0, 3, maxstep) = y3f+1;
+            access_3d(h_trace, 0, c, 0, 3, maxstep) = y1f + 1;
+            access_3d(h_trace, 1, c, 0, 3, maxstep) = y2f + 1;
+            access_3d(h_trace, 2, c, 0, 3, maxstep) = y3f + 1;
 
-            if(verbose) {
-                printf("Trace Step %d: %f, %f, %f\n", c, y1f+1, y2f+1, y3f+1);
+            if (verbose) {
+                printf("Trace Step %d: %f, %f, %f\n", c, y1f + 1, y2f + 1, y3f + 1);
                 fflush(stdout);
             }
 
-            if (c == maxstep-1){
+            if (c == maxstep - 1) {
                 break;
             }
         }
 
-        if(verbose) {
+        if (verbose) {
             printf("Terminating after taking %d steps.\n", c);
         }
 
-        tracelength[0] = c+1;
+        tracelength[0] = c + 1;
 
         cudaFree(h_grdx);
         cudaFree(h_grdy);

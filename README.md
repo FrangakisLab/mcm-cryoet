@@ -98,12 +98,14 @@ geodesic_trace_cuda mask.em output_vol.em 10 10 10 30 30 30
 
 **<details><summary>TL;DR</summary><p>**
 ```shell
-# Installs all pre-requisites (a little overkill)
-conda create -n mcm python=3.9 skbuild numpy mrcfile cython cmake=3.18 -c conda-forge cxx-compiler c-compiler
-conda activate mcm
+# Install C/C++ compilers and optionally CUDA 
+# e.g. on Ubuntu
+sudo apt install build-essentials
+sudo apt install nvidia-cuda-dev nvidia-cuda-toolkit
 
-# Optional:
-conda install -c conda-forge cudatoolkit=11.3
+# Installs all other pre-requisites (a little overkill)
+conda create -n mcm -c conda-forge python=3.9 scikit-build numpy mrcfile cython cmake=3.18
+conda activate mcm
 
 # Build
 git clone REPO

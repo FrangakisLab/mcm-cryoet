@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Author: UE, 2023
 
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import sys
 import numpy as np
 import mrcfile
@@ -57,7 +57,7 @@ def main(arg):
     print("dimensions are {} x {} x {}".format(inp.shape[2], inp.shape[1], inp.shape[0]))
 
     # Process image
-    outvol, outtrace = mcm.trace(inp, x, y, maxstep=arg.maxstep, verbose=True, prefer_gpu=True)
+    outvol, outtrace = mcm.trace(inp, x, y, maxstep=arg.maxstep, verbose=True, prefer_gpu=arg.use_gpu)
 
     # Write image output
     if arg.output_volume.endswith('em'):
@@ -82,7 +82,7 @@ def main(arg):
     print("program finished\n")
 
 if __name__ == "__main__":
-    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             description='Finds the shortest geodesic trace through a binary mask.\n\n'
 
                                         'Example: geodesic_trace -i "volume.mrc" -ov "trace.mrc" -op "trace.txt" -x 23,40,21 -y 54,23,93 ')
@@ -98,7 +98,10 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--end_point", dest="x",
                         help="voxel coordinate (one-based) of trace end.", metavar="X1,X2,X3", type=str, required=True)
     parser.add_argument("-m", "--maxstep", dest="maxstep",
-                        help="Maximum number of steps to take before terminating trace", metavar="STEPS", type=int, required=False, default=10000)
+                        help="Maximum number of steps to take before terminating trace.", metavar="STEPS", type=int, required=False, default=10000)
+    parser.add_argument("-g", "--use_gpu", dest="use_gpu",
+                        help="Whether to use CPU or GPU implementation.", metavar="BOOL", type=bool,
+                        required=False, default=True)
 
     args = parser.parse_args()
 

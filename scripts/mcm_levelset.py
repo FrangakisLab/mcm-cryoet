@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Author: UE, 2023
 
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction
 import sys
 import numpy as np
 import mrcfile
@@ -48,7 +48,7 @@ def main(arg):
     print("dimensions are {} x {} x {}\n".format(inp.shape[2], inp.shape[1], inp.shape[0]))
 
     # Process image
-    outp = mcm.mcm_levelset(inp, arg.iterations, arg.alpha, arg.beta, verbose=True)
+    outp = mcm.mcm_levelset(inp, arg.iterations, arg.alpha, arg.beta, verbose=True, prefer_gpu=arg.use_gpu)
 
     # Write image output
     if arg.output_filename.endswith('em'):
@@ -65,7 +65,7 @@ def main(arg):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             description='Smooths a volume using mean curvature and levelset motion.\n\n'
                                         'Parameter alpha determines the strength and direction of the levelset motion '
                                         'component:\n'
@@ -84,6 +84,9 @@ if __name__ == "__main__":
                         help="level set motion (along surface normals).", metavar="ALPHA", type=float, required=True)
     parser.add_argument("-b", "--beta", dest="beta",
                         help="mean curvature motion (along surface curvature).", metavar="BETA", type=float, required=True)
+    parser.add_argument("-g", "--gpu", dest="use_gpu", action=BooleanOptionalAction,
+                        help="Whether to use CPU or GPU implementation.", type=bool,
+                        required=False, default=True)
 
     args = parser.parse_args()
 

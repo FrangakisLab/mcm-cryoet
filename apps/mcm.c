@@ -68,12 +68,10 @@ int main (int argc, char **argv)
 
 #ifdef USE_CUDA
 /* allocate storage */
-    size_t size = nx * ny * nz * sizeof(float);
+    size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
     h_u = malloc(size_bytes);
     cudaMalloc((void**)&d_u, size_bytes);
-
-
 
 /* read image data */
     emread_linear(filename_in, h_u);
@@ -89,14 +87,9 @@ int main (int argc, char **argv)
     nppsMeanStdDevGetBufferSize_32f((int)size, &meastd_buf_size);
     cudaMalloc((void**)&d_meastd, meastd_buf_size);
 
+/* ---- Image ---- */
     analyse_CUDA(d_u, nx, ny, nz, d_minmax, d_meastd, &h_min, &h_max, &h_mean, &h_std);
     printf("min: %1.6f, max: %1.6f, mean: %1.6f, variance: %1.6f\n", h_min, h_max, h_mean, h_std*h_std);
-
-/* ---- Image ---- */
-    printf("minimum:       %3.6f \n", h_min);
-    printf("maximum:       %3.6f \n", h_max);
-    printf("mean:          %3.6f \n", h_mean);
-    printf("variance:      %3.6f \n\n", h_std*h_std);
 #else
 /* allocate storage */
     u=f3tensor(0, nx+1, 0, ny+1,0, nz+1);

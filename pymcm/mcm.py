@@ -58,8 +58,12 @@ def mcm_levelset(inp, iterations, alpha, beta, out=None, prefer_gpu=True, verbos
 
     # Process image
     if use_gpu:
+        if verbose:
+            print("Running on GPU.")
         combi_gpu(inp, out, iterations, alpha, beta, verbose)
     else:
+        if verbose:
+            print("Running on CPU.")
         combi_cpu(inp, out, iterations, alpha, beta, verbose)
 
     return out
@@ -115,8 +119,12 @@ def mcm(inp, iterations, out=None, prefer_gpu=True, hx=1, hy=1, hz=1, verbose=Fa
         use_gpu = False
 
     if use_gpu:
+        if verbose:
+            print("Running on GPU.")
         mcm_gpu(inp, out, iterations, hx, hy, hz, verbose)
     else:
+        if verbose:
+            print("Running on CPU.")
         mcm_cpu(inp, out, iterations, hx, hy, hz, verbose)
 
     return out
@@ -175,12 +183,16 @@ def trace(inp, x, y, out_vol=None, out_trace=None, maxstep=10000, prefer_gpu=Tru
         use_gpu = False
 
     if use_gpu:
+        if verbose:
+            print("Running on GPU.")
         tracelen = trace_gpu(inp, out_vol, out_trace,
                              x[0], x[1], x[2],
                              y[0], y[1], y[2],
                              maxstep,
                              verbose)
     else:
+        if verbose:
+            print("Running on CPU.")
         tracelen = trace_cpu(inp, out_vol, out_trace,
                              x[0], x[1], x[2],
                              y[0], y[1], y[2],

@@ -38,13 +38,13 @@ def combi_cpu(np.ndarray[float32_t, ndim=3] input,
               float alpha, float beta,
               int verbose):
 
-    cdef int nxi = input.shape[0]
+    cdef int nxi = input.shape[2]
     cdef int nyi = input.shape[1]
-    cdef int nzi = input.shape[2]
+    cdef int nzi = input.shape[0]
 
-    cdef int nxo = output.shape[0]
+    cdef int nxo = output.shape[2]
     cdef int nyo = output.shape[1]
-    cdef int nzo = output.shape[2]
+    cdef int nzo = output.shape[0]
 
     assert (nxi == nxo)
     assert (nyi == nyo)
@@ -61,13 +61,13 @@ def mcm_cpu(np.ndarray[float32_t, ndim=3] input,
             float hx, float hy, float hz,
             int verbose):
 
-    cdef int nxi = input.shape[0]
+    cdef int nxi = input.shape[2]
     cdef int nyi = input.shape[1]
-    cdef int nzi = input.shape[2]
+    cdef int nzi = input.shape[0]
 
-    cdef int nxo = output.shape[0]
+    cdef int nxo = output.shape[2]
     cdef int nyo = output.shape[1]
-    cdef int nzo = output.shape[2]
+    cdef int nzo = output.shape[0]
 
     assert (nxi == nxo)
     assert (nyi == nyo)
@@ -86,13 +86,13 @@ def trace_cpu(np.ndarray[float32_t, ndim=3] speed_input,
               int maxstep,
               int verbose):
 
-    cdef int nxi = speed_input.shape[0]
+    cdef int nxi = speed_input.shape[2]
     cdef int nyi = speed_input.shape[1]
-    cdef int nzi = speed_input.shape[2]
+    cdef int nzi = speed_input.shape[0]
 
-    cdef int nxo = output_vol.shape[0]
+    cdef int nxo = output_vol.shape[2]
     cdef int nyo = output_vol.shape[1]
-    cdef int nzo = output_vol.shape[2]
+    cdef int nzo = output_vol.shape[0]
 
     assert (nxi == nxo)
     assert (nyi == nyo)
