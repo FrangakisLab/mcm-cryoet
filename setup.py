@@ -8,5 +8,9 @@ setup(
     license="GPLv3",
     packages=['pymcm'],
     python_requires=">=3.9",
-    scripts=['scripts/mcm_levelset.py', 'scripts/mcm_3D.py', 'scripts/geodesic_trace.py'],
+    scripts=['scripts/mcm_levelset.py',
+             'scripts/mcm_3D.py',
+             'scripts/geodesic_trace.py',
+             'scripts/mcm_open.py',
+             'scripts/mcm_close.py'],
 )

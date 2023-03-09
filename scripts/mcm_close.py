@@ -17,19 +17,15 @@ def main(arg):
     if (not arg.output_filename.endswith("em")) and (not arg.output_filename.endswith("mrc")):
         raise ValueError("Unknown output image format: {}".format(arg.output_filename))
 
-    pixelwidth = [float(h) for h in arg.pixel_width.split(',')]
-    if len(pixelwidth) != 3:
-        raise ValueError("Pixel Width must be a 3-element, comma-separated list of floating point values.")
-
-    hx = pixelwidth[2]
-    hy = pixelwidth[1]
-    hz = pixelwidth[0]
+    if not (0 <= arg.alpha <= 1):
+        raise ValueError("Parameter alpha needs to be between 0 and 1 but is: {}".format(arg.alpha))
 
     # Summary
     print("input file = {}".format(arg.input_filename))
     print("output file = {}".format(arg.output_filename))
     print("iterations = {}".format(arg.iterations))
-    print("h = [{} {} {}]".format(hx, hy, hz))
+    print("alpha = {}".format(arg.alpha))
+    print("beta = {}".format(arg.beta))
     print("")
 
     # Get data
@@ -49,11 +45,20 @@ def main(arg):
                 inp = mrc.data.astype(np.float32)
             else:
                 inp = mrc.data
+    else:
+        raise ValueError("Unknown input image format: {}".format(arg.input_filename))
 
     print("dimensions are {} x {} x {}\n".format(inp.shape[2], inp.shape[1], inp.shape[0]))
 
     # Process image
-    outp = mcm.mcm(inp, arg.iterations, hx=hx, hy=hy, hz=hz, verbose=True, prefer_gpu=arg.use_gpu)
+    print("Running dilation with alpha: {} beta: {}".format(arg.alpha, arg.beta))
+    outp = mcm.mcm_levelset(inp, arg.iterations, arg.alpha, arg.beta, verbose=True, prefer_gpu=arg.use_gpu)
+    inp = outp.copy(order="C")
+
+    print("")
+
+    print("Running erosion with alpha: {} beta: {}".format(-1 * arg.alpha, arg.beta))
+    outp = mcm.mcm_levelset(inp, arg.iterations, -1 * arg.alpha, arg.beta, verbose=True, prefer_gpu=arg.use_gpu)
 
     # Write image output
     if arg.output_filename.endswith('em'):
@@ -71,17 +76,26 @@ def main(arg):
 
 if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
-                            description='Smooths a volume using mean curvature motion.\n\n'
-                                        
-                                        'Example: mcm_3D.py -i "volume.mrc" -o "volume_smooth.mrc" -p 10')
+                            description='Performs a dilation using level set motion and mcm, followed by an erosion using'
+                                        'inverted level set motion. \n\n'
+                                        'Parameter alpha determines the strength of the levelset motion '
+                                        'component:\n'
+                                        '\t0<=alpha<1 In the first pass alpha is applied, in the second pass -1*alpha '
+                                        'is applied.\n\n'
+                                        'Parameter beta determines the strength of mean curvature motion:\n'
+                                        '\t0 <= beta <= 1\n\n'
+                                        'Example: mcm_close.py -i "volume.mrc" -o "volume_smooth.mrc" -p 10 -a 0.5 -b 0.5')
     parser.add_argument("-i", "--inputFile", dest="input_filename",
                         help="input .mrc or .em file.", metavar="FILE", type=str, required=True)
     parser.add_argument("-o", "--outputFile", dest="output_filename",
                         help="output .mrc or .em file.", metavar="FILE", type=str, required=True)
     parser.add_argument("-p", "--iterations", dest="iterations",
                         help="number of iterations.", metavar="ITER", type=int, required=True)
-    parser.add_argument("-hxyz", "--pixel_width", dest="pixel_width",
-                        help="Pixel widths in x, y, z dimensions.", metavar="HX,HY,HZ", type=str, required=False, default='1,1,1')
+    parser.add_argument("-a", "--alpha", dest="alpha",
+                        help="level set motion (along surface normals).", metavar="ALPHA", type=float, required=True)
+    parser.add_argument("-b", "--beta", dest="beta",
+                        help="mean curvature motion (along surface curvature).", metavar="BETA", type=float,
+                        required=True)
     parser.add_argument("-g", "--gpu", dest="use_gpu", action=BooleanOptionalAction,
                         help="Whether to use CPU or GPU implementation.", type=bool,
                         required=False, default=True)

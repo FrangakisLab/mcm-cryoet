@@ -73,7 +73,7 @@ if __name__ == "__main__":
                                         '\t0<=alpha<1 outwards movement => Dilation\n\n' 
                                         'Parameter beta determines the strength of mean curvature motion:\n'
                                         '\t0 <= beta <= 1\n\n'
-                                        'Example: mcm_levelset -i "volume.mrc" -o "volume_smooth.mrc" -p 10 -a 0.5 -b 0.5')
+                                        'Example: mcm_levelset.py -i "volume.mrc" -o "volume_smooth.mrc" -p 10 -a 0.5 -b 0.5')
     parser.add_argument("-i", "--inputFile", dest="input_filename",
                         help="input .mrc or .em file.", metavar="FILE", type=str, required=True)
     parser.add_argument("-o", "--outputFile", dest="output_filename",

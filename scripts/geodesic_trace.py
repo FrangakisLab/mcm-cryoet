@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             description='Finds the shortest geodesic trace through a binary mask.\n\n'
 
-                                        'Example: geodesic_trace -i "volume.mrc" -ov "trace.mrc" -op "trace.txt" -x 23,40,21 -y 54,23,93 ')
+                                        'Example: geodesic_trace.py -i "volume.mrc" -ov "trace.mrc" -op "trace.txt" -x 23,40,21 -y 54,23,93 ')
 
     parser.add_argument("-i", "--inputFile", dest="input_filename",
                         help="input .mrc or .em file.", metavar="FILE", type=str, required=True)

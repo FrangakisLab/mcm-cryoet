@@ -123,8 +123,6 @@ extern "C" {
         float val_u = val_f + access_3d(gg, gx, gy, gz, dim.x, dim.y) * lvset;
         access_3d(ug, gx, gy, gz, dim.x, dim.y) = val_u;
 
-        //u[i][j][k] = f[i][j][k] + g[i][j][k] * lvset;
-
 
         if (val_u > 0.2 && val_f < 0.2) {
             float f0_x = (f[i + 1][j][k] - f[i - 1][j][k]) / 2;

@@ -64,6 +64,63 @@ mcm_levelset_cuda input.em output.em 20 0.5 0.5
 ```
 </p></details>
 
+### mcm_open
+
+Morphological opening with levelset and mean curvature motion. 
+
+**<details><summary>Python wrapper</summary><p>**
+```shell
+mcm_open.py -i input.em -o output.em -p 20 -a 0.5 -b 0.5
+```
+</p></details>
+
+**<details><summary>Python code</summary><p>**
+```python
+import pymcm.mcm as mcm
+
+# Alpha needs to be between 0 and 1
+alpha = 0.5
+assert(0 <= alpha <= 1)
+
+# Erosion
+outvol = mcm.mcm_levelset(invol, iterations=20, alpha=-1*alpha, beta=0.5, verbose=True)
+invol = outvol.copy()
+
+# Dilation
+outvol = mcm.mcm_levelset(invol, iterations=20, alpha=alpha, beta=0.5, verbose=True)
+
+```
+</p></details>
+
+### mcm_close
+
+Morphological closing with levelset and mean curvature motion. 
+
+**<details><summary>Python wrapper</summary><p>**
+```shell
+mcm_close.py -i input.em -o output.em -p 20 -a 0.5 -b 0.5
+```
+</p></details>
+
+**<details><summary>Python code</summary><p>**
+```python
+import pymcm.mcm as mcm
+
+# Alpha needs to be between 0 and 1
+alpha = 0.5
+assert(0 <= alpha <= 1)
+
+# Dilation
+outvol = mcm.mcm_levelset(invol, iterations=20, alpha=-alpha, beta=0.5, verbose=True)
+invol = outvol.copy()
+
+# Erosion
+outvol = mcm.mcm_levelset(invol, iterations=20, alpha=-1*alpha, beta=0.5, verbose=True)
+
+```
+</p></details>
+
+
 ### geodesic_trace
 
 Finds the shortest geodesic path through a binary mask given a start and end point. 
