@@ -67,3 +67,4 @@ build
 dist
 _skbuild
 _cmake_test_compile/
+/mcm_cryoet.egg-info/

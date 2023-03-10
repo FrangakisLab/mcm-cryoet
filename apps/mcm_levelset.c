@@ -84,29 +84,21 @@ int main (int argc, char **argv)
     size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
     h_u = malloc(size_bytes);
-    cudaMalloc((void**)&d_u, size_bytes);
+    CUDA_CALL(cudaMalloc((void**)&d_u, size_bytes));
 
 /* read image data */
     emread_linear(filename_in, h_u);
 
-    printf("value 1,1,1: %f\n", access_3d(h_u, 1, 1, 1, nx, ny));
-    printf("value 10,1,1: %f\n", access_3d(h_u, 10, 1, 1, nx, ny));
-    printf("value 10,10,1: %f\n", access_3d(h_u, 10, 10, 1, nx, ny));
-    printf("value 10,10,10: %f\n", access_3d(h_u, 10, 10, 10, nx, ny));
-    printf("value 1,10,10: %f\n", access_3d(h_u, 1, 10, 10, nx, ny));
-    printf("value 1,1,10: %f\n", access_3d(h_u, 1, 1, 10, nx, ny));
-
-    printf("value 45,21,30: %i\n", per_idx(-1, nz));
     // Send to GPU
-    cudaMemcpy(d_u, h_u, size_bytes, cudaMemcpyHostToDevice);
+    CUDA_CALL(cudaMemcpy(d_u, h_u, size_bytes, cudaMemcpyHostToDevice));
 
     // Min/Max setup
     nppsMinMaxGetBufferSize_32f((int)size, &minmax_buf_size);
-    cudaMalloc((void**)&d_minmax, minmax_buf_size);
+    CUDA_CALL(cudaMalloc((void**)&d_minmax, minmax_buf_size));
 
     // Mean/Std setup
     nppsMeanStdDevGetBufferSize_32f((int)size, &meastd_buf_size);
-    cudaMalloc((void**)&d_meastd, meastd_buf_size);
+    CUDA_CALL(cudaMalloc((void**)&d_meastd, meastd_buf_size));
 
     analyse_CUDA(d_u, nx, ny, nz, d_minmax, d_meastd, &h_min, &h_max, &h_mean, &h_std);
 
@@ -135,7 +127,7 @@ int verbose = 1;
 
 /* ---- write output image (em format) ---- */
 #ifdef USE_CUDA
-    cudaMemcpy(h_u, d_u, size_bytes, cudaMemcpyDeviceToHost);
+    CUDA_CALL(cudaMemcpy(h_u, d_u, size_bytes, cudaMemcpyDeviceToHost));
     emwrite_linear(filename_out, h_u, &header, nx, ny, nz);
 #else
 /* write image data and close file */
@@ -148,9 +140,9 @@ int verbose = 1;
 #ifdef USE_CUDA
     free(h_u);
 
-    cudaFree(d_u);
-    cudaFree(d_minmax);
-    cudaFree(d_meastd);
+    CUDA_CALL(cudaFree(d_u));
+    CUDA_CALL(cudaFree(d_minmax));
+    CUDA_CALL(cudaFree(d_meastd));
 #else
     free_f3tensor(u, 0, nx+1,0, ny+1,0, nz+1);
 #endif

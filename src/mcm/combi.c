@@ -45,7 +45,6 @@ void segm_combi
             for (k=1; k<=nz; k++)
             {
                 /* central spatial derivatives */
-
                 f0_x  = (f[i+1][j][k] - f[i-1][j][k]) / 2;
                 f0_y  = (f[i][j+1][k] - f[i][j-1][k]) / 2;
                 f0_z  = (f[i][j][k+1] - f[i][j][k-1]) / 2;

@@ -24,33 +24,33 @@ void run_combi_gpu(const float* h_input,       /* input image */
 /* allocate storage */
     size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
-    cudaMalloc((void**)&d_u, size_bytes);
+    CUDA_CALL(cudaMalloc((void**)&d_u, size_bytes));
 
     if (verbose){
         // Min/Max setup
         nppsMinMaxGetBufferSize_32f((int)size, &minmax_buf_size);
-        cudaMalloc((void**)&d_minmax, minmax_buf_size);
+        CUDA_CALL(cudaMalloc((void**)&d_minmax, minmax_buf_size));
 
         // Mean/Std setup
         nppsMeanStdDevGetBufferSize_32f((int)size, &meastd_buf_size);
-        cudaMalloc((void**)&d_meastd, meastd_buf_size);
+        CUDA_CALL(cudaMalloc((void**)&d_meastd, meastd_buf_size));
     }
 
     // Send to GPU
-    cudaMemcpy(d_u, h_input, size_bytes, cudaMemcpyHostToDevice);
+    CUDA_CALL(cudaMemcpy(d_u, h_input, size_bytes, cudaMemcpyHostToDevice));
 
 /* ---- process image ---- */
     segm_combi_iterate_CUDA(d_u, iterations, nx, ny, nz, alpha, beta, d_minmax, d_meastd, verbose);
 
 /* ---- get output image ---- */
-    cudaMemcpy(output, d_u, size_bytes, cudaMemcpyDeviceToHost);
+    CUDA_CALL(cudaMemcpy(output, d_u, size_bytes, cudaMemcpyDeviceToHost));
 
 /* ---- disallocate storage ---- */
-    cudaFree(d_u);
+    CUDA_CALL(cudaFree(d_u));
 
     if(verbose) {
-        cudaFree(d_minmax);
-        cudaFree(d_meastd);
+        CUDA_CALL(cudaFree(d_minmax));
+        CUDA_CALL(cudaFree(d_meastd));
     }
 }
 
@@ -77,33 +77,33 @@ void run_mcm_gpu(const float* input,              /* input image */
 /* allocate storage */
     size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
-    cudaMalloc((void**)&d_u, size_bytes);
+    CUDA_CALL(cudaMalloc((void**)&d_u, size_bytes));
 
     if(verbose) {
         // Min/Max setup
         nppsMinMaxGetBufferSize_32f((int) size, &minmax_buf_size);
-        cudaMalloc((void **) &d_minmax, minmax_buf_size);
+        CUDA_CALL(cudaMalloc((void **) &d_minmax, minmax_buf_size));
 
         // Mean/Std setup
         nppsMeanStdDevGetBufferSize_32f((int) size, &meastd_buf_size);
-        cudaMalloc((void **) &d_meastd, meastd_buf_size);
+        CUDA_CALL(cudaMalloc((void **) &d_meastd, meastd_buf_size));
     }
 
     // Send to GPU
-    cudaMemcpy(d_u, input, size_bytes, cudaMemcpyHostToDevice);
+    CUDA_CALL(cudaMemcpy(d_u, input, size_bytes, cudaMemcpyHostToDevice));
 
 /* ---- process image ---- */
     mcm_iterate_CUDA(d_u, iterations, ht, nx, ny, nz, hx, hy, hz, d_minmax, d_meastd, verbose);
 
 /* ---- get output image ---- */
-    cudaMemcpy(output, d_u, size_bytes, cudaMemcpyDeviceToHost);
+    CUDA_CALL(cudaMemcpy(output, d_u, size_bytes, cudaMemcpyDeviceToHost));
 
 /* ---- disallocate storage ---- */
-    cudaFree(d_u);
+    CUDA_CALL(cudaFree(d_u));
 
     if(verbose) {
-        cudaFree(d_minmax);
-        cudaFree(d_meastd);
+        CUDA_CALL(cudaFree(d_minmax));
+        CUDA_CALL(cudaFree(d_meastd));
     }
 }
 
@@ -149,27 +149,27 @@ void run_trace_gpu(const float* speed_input,  /* input speed image */
     size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
 
-    cudaMalloc((void**)&d_u, size_bytes);
+    CUDA_CALL(cudaMalloc((void**)&d_u, size_bytes));
 
-    cudaMalloc((void**)&d_g, size_bytes);
+    CUDA_CALL(cudaMalloc((void**)&d_g, size_bytes));
 
-    cudaMalloc((void**)&d_grdx, size_bytes);
-    cudaMalloc((void**)&d_grdy, size_bytes);
-    cudaMalloc((void**)&d_grdz, size_bytes);
+    CUDA_CALL(cudaMalloc((void**)&d_grdx, size_bytes));
+    CUDA_CALL(cudaMalloc((void**)&d_grdy, size_bytes));
+    CUDA_CALL(cudaMalloc((void**)&d_grdz, size_bytes));
 
-    cudaMemset(d_grdx, 0, size_bytes);
-    cudaMemset(d_grdy, 0, size_bytes);
-    cudaMemset(d_grdz, 0, size_bytes);
+    CUDA_CALL(cudaMemset(d_grdx, 0, size_bytes));
+    CUDA_CALL(cudaMemset(d_grdy, 0, size_bytes));
+    CUDA_CALL(cudaMemset(d_grdz, 0, size_bytes));
 
 /* Initiate levelset with zeros */
-    cudaMemset(d_u, 0, size_bytes);
+    CUDA_CALL(cudaMemset(d_u, 0, size_bytes));
     float one = 1.f;
 
 /*Set start position of level set to 1 */
-    cudaMemcpy(&access_3d(d_u, x1, x2, x3, nx, ny), &one, sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_CALL(cudaMemcpy(&access_3d(d_u, x1, x2, x3, nx, ny), &one, sizeof(float), cudaMemcpyHostToDevice));
 
 /*Send speed file to device */
-    cudaMemcpy(d_g, speed_input, size_bytes, cudaMemcpyHostToDevice);
+    CUDA_CALL(cudaMemcpy(d_g, speed_input, size_bytes, cudaMemcpyHostToDevice));
     if (access_3d(speed_input, x1, x2, x3, nx, ny)<0.9 || access_3d(speed_input, y1, y2, y3, nx, ny)<0.9 )
     {
         printf("Error: Pixel values not equal to 1.\n");
@@ -182,11 +182,11 @@ void run_trace_gpu(const float* speed_input,  /* input speed image */
     if(verbose) {
         // Min/Max setup
         nppsMinMaxGetBufferSize_32f((int) size, &minmax_buf_size);
-        cudaMalloc((void **) &d_minmax, minmax_buf_size);
+        CUDA_CALL(cudaMalloc((void **) &d_minmax, minmax_buf_size));
 
         // Mean/Std setup
         nppsMeanStdDevGetBufferSize_32f((int) size, &meastd_buf_size);
-        cudaMalloc((void **) &d_meastd, meastd_buf_size);
+        CUDA_CALL(cudaMalloc((void **) &d_meastd, meastd_buf_size));
     }
 
 
@@ -206,11 +206,11 @@ void run_trace_gpu(const float* speed_input,  /* input speed image */
     // --> results already in outputs
 
 /* ---- disallocate storage ---- */
-    cudaFree(d_u);
-    cudaFree(d_g);
-    cudaFree(d_grdx);
-    cudaFree(d_grdy);
-    cudaFree(d_grdz);
-    cudaFree(d_minmax);
-    cudaFree(d_meastd);
+    CUDA_CALL(cudaFree(d_u));
+    CUDA_CALL(cudaFree(d_g));
+    CUDA_CALL(cudaFree(d_grdx));
+    CUDA_CALL(cudaFree(d_grdy));
+    CUDA_CALL(cudaFree(d_grdz));
+    CUDA_CALL(cudaFree(d_minmax));
+    CUDA_CALL(cudaFree(d_meastd));
 }

@@ -78,8 +78,6 @@ int main (int argc, char **argv)
         printf("exiting program\n");
         printf("\n");
         printf("\n");
-        printf("/Users/frangak/MyData/Code_Development/C/Dilation/geodesicLevelSets apis6/mask.em $apis6/mask.path1.em 480 440 7 70 70 41 \n");
-        printf("\n");
 
         exit(1);
     }
@@ -121,34 +119,34 @@ int main (int argc, char **argv)
 /* allocate storage */
     size_t size = nx * ny * nz;
     size_t size_bytes = size * sizeof(float);
-    cudaMallocHost((void**)&h_g, size_bytes);
-    cudaMalloc((void**)&d_g, size_bytes);
+    CUDA_CALL(cudaMallocHost((void**)&h_g, size_bytes));
+    CUDA_CALL(cudaMalloc((void**)&d_g, size_bytes));
 
-    cudaMallocHost((void**)&h_u, size_bytes);
-    cudaMalloc((void**)&d_u, size_bytes);
+    CUDA_CALL(cudaMallocHost((void**)&h_u, size_bytes));
+    CUDA_CALL(cudaMalloc((void**)&d_u, size_bytes));
 
-    cudaMallocHost((void**)&h_trace, 3*maxstep*sizeof(float));
+    CUDA_CALL(cudaMallocHost((void**)&h_trace, 3*maxstep*sizeof(float)));
 
-    cudaMalloc((void**)&d_grdx, size_bytes);
-    cudaMalloc((void**)&d_grdy, size_bytes);
-    cudaMalloc((void**)&d_grdz, size_bytes);
+    CUDA_CALL(cudaMalloc((void**)&d_grdx, size_bytes));
+    CUDA_CALL(cudaMalloc((void**)&d_grdy, size_bytes));
+    CUDA_CALL(cudaMalloc((void**)&d_grdz, size_bytes));
 
-    cudaMemset(d_grdx, 0, size_bytes);
-    cudaMemset(d_grdy, 0, size_bytes);
-    cudaMemset(d_grdz, 0, size_bytes);
+    CUDA_CALL(cudaMemset(d_grdx, 0, size_bytes));
+    CUDA_CALL(cudaMemset(d_grdy, 0, size_bytes));
+    CUDA_CALL(cudaMemset(d_grdz, 0, size_bytes));
 
 /*Read speed file */
     emread_linear(filename_speed_in, h_g);
 
 /* Initiate levelset with zeros */
-    cudaMemset(d_u, 0, size_bytes);
+    CUDA_CALL(cudaMemset(d_u, 0, size_bytes));
     float one = 1.f;
 
 /*Set start position of level set to 1 */
-    cudaMemcpy(&access_3d(d_u, x1, x2, x3, nx, ny), &one, sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_CALL(cudaMemcpy(&access_3d(d_u, x1, x2, x3, nx, ny), &one, sizeof(float), cudaMemcpyHostToDevice));
 
 /*Send speed file to device */
-    cudaMemcpy(d_g, h_g, size_bytes, cudaMemcpyHostToDevice);
+    CUDA_CALL(cudaMemcpy(d_g, h_g, size_bytes, cudaMemcpyHostToDevice));
 
     if (access_3d(h_g, x1, x2, x3, nx, ny)<0.9 || access_3d(h_g, y1, y2, y3, nx, ny)<0.9 )
     {
@@ -162,13 +160,13 @@ int main (int argc, char **argv)
 /* ---- Image ---- */
     // Min/Max setup
     nppsMinMaxGetBufferSize_32f((int)size, &minmax_buf_size);
-    cudaMalloc((void**)&d_minmax, minmax_buf_size);
+    CUDA_CALL(cudaMalloc((void**)&d_minmax, minmax_buf_size));
 
     // Mean/Std setup
     nppsMeanStdDevGetBufferSize_32f((int)size, &meastd_buf_size);
-    cudaMalloc((void**)&d_meastd, meastd_buf_size);
+    CUDA_CALL(cudaMalloc((void**)&d_meastd, meastd_buf_size));
 
-    analyse_CUDA (d_u, nx, ny, nz, d_minmax, d_meastd, &h_min, &h_max, &h_mean, &h_std);
+    analyse_CUDA (d_g, nx, ny, nz, d_minmax, d_meastd, &h_min, &h_max, &h_mean, &h_std);
     printf("min: %3.6f, max: %3.6f, mean: %3.6f, variance: %3.6f\n", h_min, h_max, h_mean, h_std*h_std);
 #else
 
@@ -206,7 +204,7 @@ int main (int argc, char **argv)
 
 
 /* ---- Image ---- */
-    analyse (u, nx, ny, nz, &min, &max, &mean, &vari);
+    analyse (g, nx, ny, nz, &min, &max, &mean, &vari);
     printf("min: %3.6f, max: %3.6f, mean: %3.6f, variance: %3.6f\n", min, max, mean, vari);
 #endif
 
@@ -253,17 +251,17 @@ int verbose = 1;
 
 /* ---- disallocate storage ---- */
 #ifdef USE_CUDA
-    cudaFreeHost(h_g);
-    cudaFreeHost(h_u);
-    cudaFreeHost(h_trace);
+    CUDA_CALL(cudaFreeHost(h_g));
+    CUDA_CALL(cudaFreeHost(h_u));
+    CUDA_CALL(cudaFreeHost(h_trace));
 
-    cudaFree(d_u);
-    cudaFree(d_g);
-    cudaFree(d_grdx);
-    cudaFree(d_grdy);
-    cudaFree(d_grdz);
-    cudaFree(d_minmax);
-    cudaFree(d_meastd);
+    CUDA_CALL(cudaFree(d_u));
+    CUDA_CALL(cudaFree(d_g));
+    CUDA_CALL(cudaFree(d_grdx));
+    CUDA_CALL(cudaFree(d_grdy));
+    CUDA_CALL(cudaFree(d_grdz));
+    CUDA_CALL(cudaFree(d_minmax));
+    CUDA_CALL(cudaFree(d_meastd));
 #else
     free_f3tensor(u, 0, nx+1,0, ny+1,0, nz+1);
     free_f3tensor(g, 0, nx+1,0, ny+1,0, nz+1);

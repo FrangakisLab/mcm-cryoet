@@ -1,7 +1,5 @@
 #include "geodesic.cuh"
 
-
-
 extern "C" {
     __global__
     void segm_geo_kernel(const float *fg, float *ug, const float *gg, float *grdx, float *grdy, float *grdz, int3 dim) {
@@ -154,10 +152,10 @@ extern "C" {
         size_t size_bytes = size * sizeof(float);
 
         /* ---- allocate storage f ---- */
-        cudaMalloc((void **) &d_f, size_bytes);
+        CUDA_CALL(cudaMalloc((void **) &d_f, size_bytes));
 
         /* ---- copy u into f ---- */
-        cudaMemcpy(d_f, d_u, size_bytes, cudaMemcpyDeviceToDevice);
+        CUDA_CALL(cudaMemcpy(d_f, d_u, size_bytes, cudaMemcpyDeviceToDevice));
 
         /* loop */
         dim3 block;
@@ -178,7 +176,7 @@ extern "C" {
         segm_geo_kernel<<<grid, block, 1000 * sizeof(float)>>>(d_f, d_u, d_g, d_grdx, d_grdy, d_grdz, dim);
 
         /* ---- disallocate storage for f ---- */
-        cudaFree(d_f);
+        CUDA_CALL(cudaFree(d_f));
     }
 
     __host__
@@ -211,9 +209,9 @@ extern "C" {
         size_t size = nx * ny * nz;
         size_t size_bytes = size * sizeof(float);
 
-        cudaMallocHost((void **) &h_grdx, size_bytes);
-        cudaMallocHost((void **) &h_grdy, size_bytes);
-        cudaMallocHost((void **) &h_grdz, size_bytes);
+        CUDA_CALL(cudaMallocHost((void **) &h_grdx, size_bytes));
+        CUDA_CALL(cudaMallocHost((void **) &h_grdy, size_bytes));
+        CUDA_CALL(cudaMallocHost((void **) &h_grdz, size_bytes));
 
         if (verbose) {
             analyse_CUDA(d_u, nx, ny, nz, d_minmax, d_meastd, &h_min, &h_max, &h_mean, &h_std);
@@ -236,13 +234,13 @@ extern "C" {
             }
 
             /* pull testvalue from device */
-            cudaMemcpy(&h_val_u, &access_3d(d_u, y1, y2, y3, nx, ny), sizeof(float), cudaMemcpyDeviceToHost);
+            CUDA_CALL(cudaMemcpy(&h_val_u, &access_3d(d_u, y1, y2, y3, nx, ny), sizeof(float), cudaMemcpyDeviceToHost));
         }
 
         /* pull arrays from device */
-        cudaMemcpy(h_grdx, d_grdx, size_bytes, cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_grdy, d_grdy, size_bytes, cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_grdz, d_grdz, size_bytes, cudaMemcpyDeviceToHost);
+        CUDA_CALL(cudaMemcpy(h_grdx, d_grdx, size_bytes, cudaMemcpyDeviceToHost));
+        CUDA_CALL(cudaMemcpy(h_grdy, d_grdy, size_bytes, cudaMemcpyDeviceToHost));
+        CUDA_CALL(cudaMemcpy(h_grdz, d_grdz, size_bytes, cudaMemcpyDeviceToHost));
 
         /* rest is CPU */
         // Null u and set start point
@@ -315,8 +313,8 @@ extern "C" {
 
         tracelength[0] = c + 1;
 
-        cudaFree(h_grdx);
-        cudaFree(h_grdy);
-        cudaFree(h_grdz);
+        CUDA_CALL(cudaFreeHost(h_grdx));
+        CUDA_CALL(cudaFreeHost(h_grdy));
+        CUDA_CALL(cudaFreeHost(h_grdz));
     }
 }
