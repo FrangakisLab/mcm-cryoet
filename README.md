@@ -34,6 +34,8 @@ mcm_3D_cuda input.em output.em 20
 ```
 </p></details>
 
+---
+
 ### mcm_levelset
 
 Smooth a volume using a combination of mean curvature motion and levelset motion. 
@@ -64,6 +66,8 @@ mcm_levelset_cuda input.em output.em 20 0.5 0.5
 ```
 </p></details>
 
+---
+
 ### mcm_open
 
 Morphological opening with levelset and mean curvature motion. 
@@ -91,6 +95,8 @@ outvol = mcm.mcm_levelset(invol, iterations=20, alpha=alpha, beta=0.5, verbose=T
 
 ```
 </p></details>
+
+---
 
 ### mcm_close
 
@@ -120,6 +126,7 @@ outvol = mcm.mcm_levelset(invol, iterations=20, alpha=-1*alpha, beta=0.5, verbos
 ```
 </p></details>
 
+---
 
 ### geodesic_trace
 
@@ -222,16 +229,16 @@ parameters. If the CUDA-accelerated library is found, it will be preferred by th
 ```shell
 conda create -n mcm python=3.9 skbuild numpy mrcfile
 conda activate mcm
-git clone REPO
-cd REPO
+git clone https://github.com/FrangakisLab/mcm-cryoet.git
+cd mcm-cryoet
 pip install .
 ```
 </p></details>
 
 **<details><summary>Pure C applications</summary><p>**
 ```shell
-git clone REPO
-cd REPO
+git clone https://github.com/FrangakisLab/mcm-cryoet.git
+cd mcm-cryoet
 mkdir build; cd build
 cmake ..
 make
@@ -241,8 +248,8 @@ make
 
 **<details><summary>CUDA-accelerated applications</summary><p>**
 ```shell
-git clone REPO
-cd REPO
+git clone https://github.com/FrangakisLab/mcm-cryoet.git
+cd mcm-cryoet
 mkdir build; cd build
 cmake ..
 make
