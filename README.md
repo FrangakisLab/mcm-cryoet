@@ -8,12 +8,38 @@ If you use these tools, please cite:
 
 **Contents:**
 
-* [Examples](##Examples)
-* [Tools](##Tools)
-* [Installation](##Installation)
+* [Examples](#examples)
+* [Tools](#tools)
+* [Installation](#installation)
 
+---
 
 ## Examples
+
+## Smoothing a hand segmentation with staircase-artifacts and holes
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/6641113/224759832-2812e8de-c21c-4d62-a2af-fce798b3bc3d.gif" alt="Movie mcm_close.py"/>
+</p>
+
+Existing hand segmentations in EM/MRC-Format can be smoothed and filled in using [mcm_close.py](#mcm_close). The tool is conceptually similar to binary morphological closing and gauss filtering, but should yield better results with close to no parameter tuning. The program diffuses the input signal depending on the local image gradient and local mean curvature. 
+
+The volume shown above was a binary segmemtation of size 900 x 700 x 250. The movie was generated using the following parameters (replace ITERNUM with the iteration number of your choice). The `--binary` option ensures rescaling to data range of [0 1] after diffusion.
+
+```shell
+# Run mcm_close for ITERNUM iterations.
+mcm_close.py -i vol_in.mrc -o vol_out.mrc -p ITERNUM -a 0.5 -b 0.5 --binary
+```
+
+Optionally, it is possible to threshold the output image, to obtain a new binary output:
+
+```shell
+# Run mcm_close for ITERNUM iterations.
+mcm_close.py -i vol_in.mrc -o vol_out.mrc -p ITERNUM -a 0.5 -b 0.5 --binary --threshold 0.5
+```
+---
+
+
 
 ## Tools
 
