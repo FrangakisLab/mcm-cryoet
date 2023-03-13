@@ -84,7 +84,7 @@ if __name__ == "__main__":
                         help="level set motion (along surface normals).", metavar="ALPHA", type=float, required=True)
     parser.add_argument("-b", "--beta", dest="beta",
                         help="mean curvature motion (along surface curvature).", metavar="BETA", type=float, required=True)
-    parser.add_argument("-g", "--gpu", dest="use_gpu", action=BooleanOptionalAction,
+    parser.add_argument("--gpu", dest="use_gpu", action=BooleanOptionalAction,
                         help="Whether to use CPU or GPU implementation.", type=bool,
                         required=False, default=True)
 

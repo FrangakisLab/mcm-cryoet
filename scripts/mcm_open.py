@@ -52,12 +52,29 @@ def main(arg):
     # Process image
     print("Running erosion with alpha: {} beta: {}".format(-1 * arg.alpha, arg.beta))
     outp = mcm.mcm_levelset(inp, arg.iterations, -1 * arg.alpha, arg.beta, verbose=True, prefer_gpu=arg.use_gpu)
+
+    # Rescale output to [0, 1]
+    if arg.is_binary:
+        maximum = outp.max()
+        outp[outp < 0] = 0
+        outp = outp / maximum
+
     inp = outp.copy(order="C")
 
     print("")
 
     print("Running dilation with alpha: {} beta: {}".format(arg.alpha, arg.beta))
     outp = mcm.mcm_levelset(inp, arg.iterations, arg.alpha, arg.beta, verbose=True, prefer_gpu=arg.use_gpu)
+
+    # Rescale output to [0, 1]
+    if arg.is_binary:
+        maximum = outp.max()
+        outp[outp < 0] = 0
+        outp = outp / maximum
+
+    # Threshold output
+    if arg.threshold is not None:
+        outp = np.greater(outp, arg.threshold).astype(np.float32)
 
     # Write image output
     if arg.output_filename.endswith('em'):
@@ -94,7 +111,14 @@ if __name__ == "__main__":
                         help="level set motion (along surface normals).", metavar="ALPHA", type=float, required=True)
     parser.add_argument("-b", "--beta", dest="beta",
                         help="mean curvature motion (along surface curvature).", metavar="BETA", type=float, required=True)
-    parser.add_argument("-g", "--gpu", dest="use_gpu", action=BooleanOptionalAction,
+    parser.add_argument("-t", "--threshold", dest="threshold",
+                        help="Fraction of the maximum value in map at which to threshold. No thresholding if omitted.", type=float,
+                        required=False, default=None)
+    parser.add_argument("--binary", dest="is_binary", action=BooleanOptionalAction,
+                        help="Whether or not the volume is binary. If not binary, volume will not be rescaled to [0 1] after processing.",
+                        type=bool,
+                        required=False, default=True)
+    parser.add_argument("--gpu", dest="use_gpu", action=BooleanOptionalAction,
                         help="Whether to use CPU or GPU implementation.", type=bool,
                         required=False, default=True)
 

@@ -99,7 +99,7 @@ if __name__ == "__main__":
                         help="voxel coordinate (one-based) of trace end.", metavar="X1,X2,X3", type=str, required=True)
     parser.add_argument("-m", "--maxstep", dest="maxstep",
                         help="Maximum number of steps to take before terminating trace.", metavar="STEPS", type=int, required=False, default=10000)
-    parser.add_argument("-g", "--use_gpu", dest="use_gpu",
+    parser.add_argument("--use_gpu", dest="use_gpu",
                         help="Whether to use CPU or GPU implementation.", metavar="BOOL", type=bool,
                         required=False, default=True)
 

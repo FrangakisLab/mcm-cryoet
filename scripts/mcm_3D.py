@@ -82,7 +82,7 @@ if __name__ == "__main__":
                         help="number of iterations.", metavar="ITER", type=int, required=True)
     parser.add_argument("-hxyz", "--pixel_width", dest="pixel_width",
                         help="Pixel widths in x, y, z dimensions.", metavar="HX,HY,HZ", type=str, required=False, default='1,1,1')
-    parser.add_argument("-g", "--gpu", dest="use_gpu", action=BooleanOptionalAction,
+    parser.add_argument("--gpu", dest="use_gpu", action=BooleanOptionalAction,
                         help="Whether to use CPU or GPU implementation.", type=bool,
                         required=False, default=True)
 

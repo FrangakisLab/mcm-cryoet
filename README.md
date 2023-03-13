@@ -1,5 +1,19 @@
 # Mean curvature motion and levelset motion for cryo-ET
 
+Three-dimensional visualization of biological samples is essential for understanding their architecture and function. However, it is often challenging due to the macromolecular crowdedness of the samples and low signal-to-noise ratio of the cryo-electron tomograms. Denoising and segmentation techniques address this challenge by increasing the signal-to-noise ratio and by simplifying the data in images. Here, mean curvature motion is presented as a method that can be applied to segmentation results, created either manually or automatically, to significantly improve both the visual quality and downstream computational handling. Mean curvature motion is a process based on nonlinear anisotropic diffusion that smooths along edges and causes high-curvature features, such as noise, to disappear. In combination with level-set methods for image erosion and dilation, the application of mean curvature motion to electron tomograms and segmentations removes sharp edges or spikes in the visualized surfaces, produces an improved surface quality, and improves overall visualization and interpretation of the three-dimensional images.
+
+If you use these tools, please cite:
+
+* Frangakis AS. [**Mean curvature motion facilitates the segmentation and surface visualization of electron tomograms.**](https://www.sciencedirect.com/science/article/abs/pii/S104784772200003X) J Struct Biol. 2022 Mar;214(1):107833. doi: [10.1016/j.jsb.2022.107833](https://doi.org/10.1016/j.jsb.2022.107833). Epub 2022 Jan 21. PMID: [35074502](https://pubmed.ncbi.nlm.nih.gov/35074502/).
+
+**Contents:**
+
+* [Examples](##Examples)
+* [Tools](##Tools)
+* [Installation](##Installation)
+
+
+## Examples
 
 ## Tools
 
@@ -168,7 +182,7 @@ sudo apt install build-essentials
 sudo apt install nvidia-cuda-dev nvidia-cuda-toolkit
 
 # Installs all other pre-requisites (a little overkill)
-conda create -n mcm -c conda-forge python=3.9 scikit-build numpy mrcfile cython cmake=3.18
+conda create -n mcm -c conda-forge python=3.9 scikit-build numpy mrcfile cython cmake=3.23
 conda activate mcm
 
 # Build
@@ -201,7 +215,7 @@ parameters. If the CUDA-accelerated library is found, it will be preferred by th
 ### Prerequisites
 
 **<details><summary>Python package (recommended)</summary><p>**
-* CMake >= 3.18
+* CMake >= 3.23
 * C/C++ compiler
 * Python >= 3.9
 * Python packages: 
@@ -213,12 +227,12 @@ parameters. If the CUDA-accelerated library is found, it will be preferred by th
 </p></details>
 
 **<details><summary>Pure C applications</summary><p>**
-* CMake >= 3.18
+* CMake >= 3.23
 * C/C++ compiler
 </p></details>
 
 **<details><summary>CUDA-accelerated applications</summary><p>**
-* CMake >= 3.18
+* CMake >= 3.23
 * C/C++ compiler
 * CUDA toolkit
 </p></details>
