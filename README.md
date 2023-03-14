@@ -10,8 +10,9 @@ If you use these tools, please cite:
 
 * [Examples](#examples)
   * [Smoothing a hand segmentation with staircase-artifacts and holes](#smoothing-a-hand-segmentation-with-staircase-artifacts-and-holes)
+  * [Reducing noise in a membrane segmentation](#reducing-noise-in-a-membrane-segmentation)
 * [Tools](#tools)
-  * [mcm_3D](#mcm_3D)
+  * [mcm_3D](#mcm-3D)
   * [mcm_levelset](#mcm_levelset)
   * [mcm_close](#mcm_close)
   * [mcm_open](#mcm_open)
@@ -22,7 +23,7 @@ If you use these tools, please cite:
 
 ## Examples
 
-## Smoothing a hand segmentation with staircase-artifacts and holes
+### Smoothing a hand segmentation with staircase-artifacts and holes
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/6641113/224759832-2812e8de-c21c-4d62-a2af-fce798b3bc3d.gif" alt="Movie mcm_close.py"/>
@@ -53,6 +54,36 @@ mcm_close.py -i vol_in.mrc -o vol_out.mrc -p ITERNUM -a 0.5 -b 0.5 --no-binary
 ```
 
 ---
+
+### Reducing noise in a membrane segmentation
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/6641113/224988573-2abdcbf3-5f6c-4de6-a3c0-b222c22fdf2b.gif" alt="Movie mcm_open1.py" width="400"/>
+<img src="https://user-images.githubusercontent.com/6641113/224988664-f64e5cda-ec75-42e1-aed4-e62ee23fa259.gif" alt="Movie mcm_open2.py" width="400"/>
+</p>
+
+Noisy embrane segmentations or probability maps can be improved by [mcm_open.py](#mcm_open). Following a similar principle as in the example above, levelset-based erosion and mean curvature motion are applied first, followed by levelset based dilation coupled with mean curvature motion. 
+
+The volume shown above is a simulated noisy segmemtation of size 900 x 700 x 250 with values scaled between 0 and 1. The movie was generated using the following parameters (replace ITERNUM with the iteration number of your choice). The `--binary` option ensures rescaling to data range of [0 1] after diffusion.
+
+```shell
+# Run mcm_open for ITERNUM iterations.
+mcm_open.py -i vol_in.mrc -o vol_out.mrc -p ITERNUM -a 0.5 -b 0.5 --binary
+```
+As above, the tool can also produce thresholded output or proceed without any rescaling. 
+
+```shell
+# Run mcm_open for ITERNUM iterations and threshold
+mcm_open.py -i vol_in.mrc -o vol_out.mrc -p ITERNUM -a 0.5 -b 0.5 --binary --threshold 0.5
+```
+
+```shell
+# Run mcm_open for ITERNUM iterations, no rescaling
+mcm_open.py -i vol_in.mrc -o vol_out.mrc -p ITERNUM -a 0.5 -b 0.5 --no-binary
+```
+---
+
+
 
 
 ## Tools
