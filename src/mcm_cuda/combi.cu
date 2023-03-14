@@ -7,94 +7,30 @@ extern "C"{
         __shared__ float f[10][10][10];
 
         // Global idx
-        const int gx = (int)(blockIdx.x * blockDim.x + threadIdx.x);
-        const int gy = (int)(blockIdx.y * blockDim.y + threadIdx.y);
-        const int gz = (int)(blockIdx.z * blockDim.z + threadIdx.z);
-
-        // Threads larger than the volume+1 go.
-        if (gx >= dim.x) return;
-        if (gy >= dim.y) return;
-        if (gz >= dim.z) return;
+        const int3 g = make_int3((int)(blockIdx.x * blockDim.x + threadIdx.x),
+                                 (int)(blockIdx.y * blockDim.y + threadIdx.y),
+                                 (int)(blockIdx.z * blockDim.z + threadIdx.z));
 
         // Local idx
-        const unsigned int i = threadIdx.x + 1;
-        const unsigned int j = threadIdx.y + 1;
-        const unsigned int k = threadIdx.z + 1;
+        const int3 l = make_int3((int)threadIdx.x + 1,
+                                 (int)threadIdx.y + 1,
+                                 (int)threadIdx.z + 1);
 
-        // Incomplete block borders
-        int3 blockMax = make_int3(8, 8, 8);
-        if (gx == dim.x-1) blockMax.x = (int)threadIdx.x + 1;
-        if (gy == dim.y-1) blockMax.y = (int)threadIdx.y + 1;
-        if (gz == dim.z-1) blockMax.z = (int)threadIdx.z + 1;
+        int i = (int) threadIdx.x + 1;
+        int j = (int) threadIdx.y + 1;
+        int k = (int) threadIdx.z + 1;
 
-        // Copy the data (direct match).
-        f[i][j][k] = access_3d(fg, gx, gy, gz, dim.x, dim.y);
-
-        // Helper
-        int gxm1 = per_idx(gx - 1, dim.x);
-        int gym1 = per_idx(gy - 1, dim.y);
-        int gzm1 = per_idx(gz - 1, dim.z);
-
-        int gxpb = per_idx(gx + blockMax.x, dim.x);
-        int gypb = per_idx(gy + blockMax.y, dim.y);
-        int gzpb = per_idx(gz + blockMax.z, dim.z);
-
-        // Overlap x
-        if (threadIdx.x < 1) {
-            f[i - 1][j][k] = access_3d(fg, gxm1, gy, gz, dim.x, dim.y);
-            f[i + blockMax.x][j][k] = access_3d(fg, gxpb, gy, gz, dim.x, dim.y);
-        }
-
-        // Overlap y
-        if (threadIdx.y < 1) {
-            f[i][j - 1][k] = access_3d(fg, gx, gym1, gz, dim.x, dim.y);
-            f[i][j + blockMax.y][k] = access_3d(fg, gx, gypb, gz, dim.x, dim.y);
-        }
-
-        // Overlap z
-        if (threadIdx.z < 1) {
-            f[i][j][k - 1] = access_3d(fg, gx, gy, gzm1, dim.x, dim.y);
-            f[i][j][k + blockMax.z] = access_3d(fg, gx, gy, gzpb, dim.x, dim.y);
-        }
-
-        // Corners xy
-        if (threadIdx.x < 1 && threadIdx.y < 1) {
-            f[i - 1][j - 1][k] = access_3d(fg, gxm1, gym1, gz, dim.x, dim.y);
-            f[i + blockMax.x][j + blockMax.y][k] = access_3d(fg, gxpb, gypb, gz, dim.x, dim.y);
-            f[i - 1][j + blockMax.y][k] = access_3d(fg, gxm1, gypb, gz, dim.x, dim.y);
-            f[i + blockMax.x][j - 1][k] = access_3d(fg, gxpb, gym1, gz, dim.x, dim.y);
-        }
-
-        // Corners xz
-        if (threadIdx.x < 1 && threadIdx.z < 1) {
-            f[i - 1][j][k - 1] = access_3d(fg, gxm1, gy, gzm1, dim.x, dim.y);
-            f[i + blockMax.x][j][k + blockMax.z] = access_3d(fg, gxpb, gy, gzpb, dim.x, dim.y);
-            f[i - 1][j][k + blockMax.z] = access_3d(fg, gxm1, gy, gzpb, dim.x, dim.y);
-            f[i + blockMax.x][j][k - 1] = access_3d(fg, gxpb, gy, gzm1, dim.x, dim.y);
-        }
-
-        // Corners yz
-        if (threadIdx.y < 1 && threadIdx.z < 1) {
-            f[i][j - 1][k - 1] = access_3d(fg, gx, gym1, gzm1, dim.x, dim.y);
-            f[i][j + blockMax.y][k + blockMax.z] = access_3d(fg, gx, gypb, gzpb, dim.x, dim.y);
-            f[i][j - 1][k + blockMax.z] = access_3d(fg, gx, gym1, gzpb, dim.x, dim.y);
-            f[i][j + blockMax.y][k - 1] = access_3d(fg, gx, gypb, gzm1, dim.x, dim.y);
-        }
-
-        // Corners all
-        if (threadIdx.x < 1 && threadIdx.y < 1 && threadIdx.z < 1) {
-            f[i - 1][j - 1][k - 1] = access_3d(fg, gxm1, gym1, gzm1, dim.x, dim.y);
-            f[i + blockMax.x][j + blockMax.y][k + blockMax.z] = access_3d(fg, gxpb, gypb, gzpb, dim.x, dim.y);
-            f[i - 1][j + blockMax.y][k + blockMax.z] = access_3d(fg, gxm1, gypb, gzpb, dim.x, dim.y);
-            f[i + blockMax.x][j - 1][k + blockMax.z] = access_3d(fg, gxpb, gym1, gzpb, dim.x, dim.y);
-            f[i + blockMax.x][j + blockMax.y][k - 1] = access_3d(fg, gxpb, gypb, gzm1, dim.x, dim.y);
-            f[i + blockMax.x][j - 1][k - 1] = access_3d(fg, gxpb, gym1, gzm1, dim.x, dim.y);
-            f[i - 1][j + blockMax.y][k - 1] = access_3d(fg, gxm1, gypb, gzm1, dim.x, dim.y);
-            f[i - 1][j - 1][k + blockMax.z] = access_3d(fg, gxm1, gym1, gzpb, dim.x, dim.y);
+        if (g.x < dim.x & g.y < dim.y & g.z < dim.z) {
+            copy_stencil(f, fg, dim, g, l);
         }
 
         // Sync
         __syncthreads();
+
+        // Threads larger than the volume go now that we synced.
+        if (g.x >= dim.x) return;
+        if (g.y >= dim.y) return;
+        if (g.z >= dim.z) return;
 
         // Compute curvature
         float f0_x = (f[i + 1][j][k] - f[i - 1][j][k]) / 2.f;
@@ -168,7 +104,7 @@ extern "C"{
                                    + max_fm_z * max_fm_z + min_fp_z * min_fp_z);
 
         // Return
-        access_3d(ug, gx, gy, gz, dim.x, dim.y) = f[i][j][k] + beta * curv + alpha * lvset;
+        access_3d(ug, g.x, g.y, g.z, dim.x, dim.y) = f[i][j][k] + beta * curv + alpha * lvset;
     }
 
     __host__

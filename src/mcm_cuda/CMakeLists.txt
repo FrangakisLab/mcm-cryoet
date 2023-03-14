@@ -22,7 +22,7 @@ target_link_libraries(mcm_cuda
         )
 set_target_properties(mcm_cuda
         PROPERTIES
-            CUDA_SEPARABLE_COMPILATION OFF
+            CUDA_SEPARABLE_COMPILATION ON
             CUDA_ARCHITECTURES all
             POSITION_INDEPENDENT_CODE ON
         )

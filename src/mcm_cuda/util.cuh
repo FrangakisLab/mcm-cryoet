@@ -9,11 +9,12 @@
 // Periodic boundary condition indeces
 #define per_idx(idx, dim) ( ((dim) + ((idx) % (dim))) % (dim) )
 
-// Reflected boundary condition indeces
-//TODO: reflected boundary
+// Extended boundary condition indeces
+#define ext_idx(idx, dim) (min(max((idx), 0), (dim)-1))
 
 // 3d access tp linear array
 #define access_3d(arr, x, y, z, dx, dy) (arr[(x) + ((dx) * (y)) + ((dx) * (dy) * (z))])
+
 
 #ifdef __cplusplus
 #include <iostream>
@@ -22,16 +23,18 @@
 #define CUDA_CALL( call )               \
 {                                       \
 cudaError_t result = call;              \
-if ( cudaSuccess != result )            \
-    std::cerr << "CUDA error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << cudaGetErrorString( result ) << " (" << #call << ")" << std::endl;  \
+if ( cudaSuccess != result ){            \
+    std::cerr << "CUDA error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << cudaGetErrorString( result ) << " (" << #call << ")" << std::endl << std::flush; \
+    exit(-1);}\
 }
 
 // NPP error checking in C++
 #define NPP_CALL( call )               \
 {                                       \
 NppStatus result = call;              \
-if ( NPP_SUCCESS != result )            \
-    std::cerr << "NPP error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << result << " (" << #call << ")" << std::endl;  \
+if ( NPP_SUCCESS != result ){            \
+    std::cerr << "NPP error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << result << " (" << #call << ")" << std::endl << std::flush; \
+    exit(-1);}\
 }
 
 extern "C" {
@@ -42,18 +45,23 @@ extern "C" {
 #define CUDA_CALL( call )               \
 {                                       \
 cudaError_t result = call;              \
-if ( cudaSuccess != result )              \
-    fprintf(stderr, "CUDA error %i in %s: %i: %s (%s)\n", result, __FILE__, __LINE__, cudaGetErrorString( result ), #call);                                      \
+if ( cudaSuccess != result ){              \
+    fprintf(stderr, "CUDA error %i in %s: %i: %s (%s)\n", result, __FILE__, __LINE__, cudaGetErrorString( result ), #call); fflush(stderr); \
+    exit(-1);}\
 }
 
 // NPP error checking C
 #define NPP_CALL( call )               \
 {                                       \
 NppStatus result = call;              \
-if ( NPP_SUCCESS != result )           \
-    fprintf(stderr, "NPP error %i in %s: %i: %s (%s)\n", result, __FILE__, __LINE__,  result, #call);                                   \
+if ( NPP_SUCCESS != result ){           \
+    fprintf(stderr, "NPP error %i in %s: %i: %s (%s)\n", result, __FILE__, __LINE__,  result, #call); fflush(stderr); \
+    exit(-1);}\
 }
 #endif
+
+__device__
+void copy_stencil(float dst[10][10][10], const float *src, int3 dim, int3 g, int3 l);
 
 void analyse_CUDA
         (float *d_u,
