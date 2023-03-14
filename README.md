@@ -11,6 +11,7 @@ If you use these tools, please cite:
 * [Examples](#examples)
   * [Smoothing a hand segmentation with staircase-artifacts and holes](#smoothing-a-hand-segmentation-with-staircase-artifacts-and-holes)
   * [Reducing noise in a membrane segmentation](#reducing-noise-in-a-membrane-segmentation)
+  * [Finding the shortest path through a binary mask](#finding-the-shortest-path-through-a-binary-mask)
 * [Tools](#tools)
   * [mcm_3D](#mcm-3D)
   * [mcm_levelset](#mcm_levelset)
@@ -83,7 +84,20 @@ mcm_open.py -i vol_in.mrc -o vol_out.mrc -p ITERNUM -a 0.5 -b 0.5 --no-binary
 ```
 ---
 
+### Finding the shortest path through a binary mask
 
+<p align="center">
+<img src="https://user-images.githubusercontent.com/6641113/225009284-309f79c3-5490-4a69-87a6-d8a91e7fa1f6.gif" alt="Movie mcm_close.py"/>
+</p>
+
+The tool [geodesic_trace.py](#geodesic_trace) allows finding the connection between two points through a binary mask (e.g. a filament segmentation). Filling a mask from a start point X using levelset motion enables recording the path of the diffusion front until an endpoint Y is reached. Tracing back the path of the diffusion from Y to X yields the shortest connection between the points through the mask. This is conceptually similar to pathfinding using Dijkstra's algorithm. 
+
+For the sake of consistency, the tool is demonstrated using a membrane mask. The volume shown above is a binary segmemtation of size 900 x 700 x 250. The movie was generated using the following parameters:
+
+```shell
+# Run geodesic_trace
+geodesic_trace.py -i in_mask.mrc -ov out_trace.mrc -ot trace_coords.txt -x 352,222,47 -y 110,44,30
+```
 
 
 ## Tools
