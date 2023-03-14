@@ -1,13 +1,15 @@
 #! /usr/bin/env python3
 # Author: UE, 2023
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter, BooleanOptionalAction
 import sys
 import numpy as np
 import mrcfile
 import pymcm.mcm as mcm
 from pymcm import emread, emwrite
 
+class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
+    pass
 
 def main(arg):
     # Parse args
@@ -70,7 +72,7 @@ def main(arg):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
+    parser = ArgumentParser(formatter_class=CustomFormatter,
                             description='Smooths a volume using mean curvature motion.\n\n'
                                         
                                         'Example: mcm_3D.py -i "volume.mrc" -o "volume_smooth.mrc" -p 10')

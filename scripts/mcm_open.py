@@ -1,12 +1,15 @@
 #! /usr/bin/env python3
 # Author: UE, 2023
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction, RawDescriptionHelpFormatter
 import sys
 import numpy as np
 import mrcfile
 import pymcm.mcm as mcm
 from pymcm import emread, emwrite
+
+class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
+    pass
 
 def main(arg):
     # Parse args
@@ -91,7 +94,7 @@ def main(arg):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
+    parser = ArgumentParser(formatter_class=CustomFormatter,
                             description='Performs an erosion using level set motion and mcm, followed by a dilation using'
                                         'inverted level set motion. \n\n'
                                         'Parameter alpha determines the strength of the levelset motion '

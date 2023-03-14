@@ -1,13 +1,15 @@
 #! /usr/bin/env python3
 # Author: UE, 2023
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter, BooleanOptionalAction
 import sys
 import numpy as np
 import mrcfile
 import pymcm.mcm as mcm
 from pymcm import emread, emwrite
 
+class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
+    pass
 
 def main(arg):
     # Parse args
@@ -82,7 +84,7 @@ def main(arg):
     print("program finished\n")
 
 if __name__ == "__main__":
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
+    parser = ArgumentParser(formatter_class=CustomFormatter,
                             description='Finds the shortest geodesic trace through a binary mask.\n\n'
 
                                         'Example: geodesic_trace.py -i "volume.mrc" -ov "trace.mrc" -op "trace.txt" -x 23,40,21 -y 54,23,93 ')
@@ -99,8 +101,8 @@ if __name__ == "__main__":
                         help="voxel coordinate (one-based) of trace end.", metavar="X1,X2,X3", type=str, required=True)
     parser.add_argument("-m", "--maxstep", dest="maxstep",
                         help="Maximum number of steps to take before terminating trace.", metavar="STEPS", type=int, required=False, default=10000)
-    parser.add_argument("--use_gpu", dest="use_gpu",
-                        help="Whether to use CPU or GPU implementation.", metavar="BOOL", type=bool,
+    parser.add_argument("--gpu", dest="use_gpu", action=BooleanOptionalAction,
+                        help="Whether to use CPU or GPU implementation.", type=bool,
                         required=False, default=True)
 
     args = parser.parse_args()
